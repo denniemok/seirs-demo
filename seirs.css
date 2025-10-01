@@ -1,27 +1,528 @@
-span.varS { color: black; }
-span.varE { color: green; }
-span.varI { color: red; }
-span.varR { color: blue; }
-path.varS { stroke: black; stroke-width: 2; fill: none; }
-path.varE { stroke: green; stroke-width: 2; fill: none; }
-path.varI { stroke: red; stroke-width: 2; fill: none; }
-path.varR { stroke: blue; stroke-width: 2; fill: none; }
-span.plot-control { display: block; margin: 1em;}
-input[type=range] { width: 25em; display: inline-block; vertical-align: middle; }
-#model-params h2 { text-align: left; padding-left: 1.5rem; }
-#legend { text-align: center; width: 50vw; margin: 0 auto; }
-#model-eqns { float: left; width: 35%; }
-#model-params { float: right; width: 60%; }
-#plot { clear: both; padding-bottom: 2em; }
-#plot svg { width: 75vw; height: 40vh; margin: 0 auto; display: block; }
-.axis { stroke: black; stroke-linecap: round; }
-#diagram { text-align: center; padding-bottom: 2em; }
-#diagram img { width: 30em; }
-
-#model-container { width: auto; text-align: center; }
-#model-container > div { text-align: left;}
-#model-container #model-eqns { width: auto; padding-right: 1em; display: inline-block; float: none; vertical-align: top; }
-#model-container #model-params { width: auto; padding-left: 1em; display: inline-block; float: none; vertical-align: top; }
-
-#footer { text-align: center; padding-top: 2em; font-size: 90%; }
-#footer a:link, #footer a:visited, #footer a:hover, #footer a:focus, #footer a:active { color: #3182bd; }
+/* ===== CSS Reset & Base Styles ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  :root {
+    --color-susceptible: #2c3e50;
+    --color-exposed: #27ae60;
+    --color-infectious: #e74c3c;
+    --color-recovered: #3498db;
+    --color-primary: #2c3e50;
+    --color-secondary: #34495e;
+    --color-background: #f8f9fa;
+    --color-card: #ffffff;
+    --color-border: #e1e8ed;
+    --color-text: #2c3e50;
+    --color-text-light: #7f8c8d;
+    --color-link: #3498db;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --radius: 12px;
+    --transition: all 0.3s ease;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--color-text);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  /* ===== Header ===== */
+  .site-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 3rem;
+  }
+  
+  .site-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    letter-spacing: -0.5px;
+  }
+  
+  .site-subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    text-align: center;
+    opacity: 0.95;
+  }
+  
+  /* ===== Main Content ===== */
+  .main-content {
+    padding-bottom: 4rem;
+  }
+  
+  /* ===== Info Section ===== */
+  .info-section {
+    margin-bottom: 2rem;
+  }
+  
+  .info-card {
+    background: var(--color-card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .description-text {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--color-border);
+  }
+  
+  .description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text);
+    text-align: center;
+    margin: 0;
+  }
+  
+  .equations-inline {
+    margin-top: 1.5rem;
+  }
+  
+  .equations-inline h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  #model-eqns-inline {
+    font-size: 0.95rem;
+    overflow-x: auto;
+  }
+  
+  /* ===== Variable Badges ===== */
+  span.varS, span.varE, span.varI, span.varR {
+    font-weight: 600;
+  }
+  
+  span.varS.badge {
+    color: var(--color-susceptible);
+    background: rgba(44, 62, 80, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 0 0.2rem;
+  }
+  
+  span.varE.badge {
+    color: var(--color-exposed);
+    background: rgba(39, 174, 96, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 0 0.2rem;
+  }
+  
+  span.varI.badge {
+    color: var(--color-infectious);
+    background: rgba(231, 76, 60, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 0 0.2rem;
+  }
+  
+  span.varR.badge {
+    color: var(--color-recovered);
+    background: rgba(52, 152, 219, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 0 0.2rem;
+  }
+  
+  /* ===== Plot Paths ===== */
+  path.varS { stroke: var(--color-susceptible); stroke-width: 3; fill: none; }
+  path.varE { stroke: var(--color-exposed); stroke-width: 3; fill: none; }
+  path.varI { stroke: var(--color-infectious); stroke-width: 3; fill: none; }
+  path.varR { stroke: var(--color-recovered); stroke-width: 3; fill: none; }
+  
+  /* ===== Cards ===== */
+  .card {
+    background: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: var(--transition);
+  }
+  
+  .card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+  
+  .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .card-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .card-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+    font-weight: 300;
+  }
+  
+  .card-body {
+    padding: 2rem;
+  }
+  
+  /* ===== Plot Section ===== */
+  #plot-section {
+    margin-bottom: 2rem;
+  }
+  
+  #plot-container {
+    padding: 2rem;
+    background: #fafbfc;
+    border-radius: 8px;
+  }
+  
+  #plot svg {
+    width: 100%;
+    height: 450px;
+    display: block;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .axis {
+    stroke: var(--color-text);
+    stroke-linecap: round;
+    stroke-width: 1.5;
+  }
+  
+  /* ===== Grid Layout ===== */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  
+  @media (max-width: 1200px) {
+    .grid-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* ===== Equations Card ===== */
+  .equations-card .card-body {
+    overflow-x: auto;
+  }
+  
+  #model-eqns {
+    font-size: 0.95rem;
+  }
+  
+  /* ===== Parameters Card ===== */
+  .param-group {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--color-border);
+  }
+  
+  .param-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  
+  .param-group h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-border);
+  }
+  
+  /* ===== Parameters Grid ===== */
+  .params-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+  }
+  
+  @media (max-width: 900px) {
+    .params-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* ===== Plot Controls ===== */
+  span.plot-control {
+    display: block;
+  }
+  
+  span.plot-control label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  span.plot-control input[type=range] {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    outline: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-bottom: 0.5rem;
+  }
+  
+  span.plot-control input[type=range]:hover {
+    opacity: 1;
+  }
+  
+  span.plot-control input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border: 3px solid #667eea;
+  }
+  
+  span.plot-control input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border: 3px solid #667eea;
+  }
+  
+  span.plot-control .show_value {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-background);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    min-width: 60px;
+    text-align: center;
+  }
+  
+  /* ===== Info Button ===== */
+  .info-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    position: relative;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+  
+  .info-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  }
+  
+  .info-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    white-space: normal;
+    width: 280px;
+    max-width: 90vw;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    line-height: 1.4;
+    text-align: left;
+  }
+  
+  .info-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: var(--color-primary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .info-btn:hover::after,
+  .info-btn:hover::before {
+    opacity: 1;
+  }
+  
+  /* ===== Footer ===== */
+  #footer {
+    background: var(--color-card);
+    padding: 2rem 0;
+    text-align: center;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+    margin-top: 4rem;
+  }
+  
+  #footer p {
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+  }
+  
+  #footer a {
+    color: var(--color-link);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  #footer a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+  }
+  
+  /* ===== Responsive Design ===== */
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 1rem;
+    }
+  
+    .site-header {
+      padding: 2rem 0;
+    }
+  
+    .site-title {
+      font-size: 1.8rem;
+    }
+  
+    .site-subtitle {
+      font-size: 1rem;
+    }
+  
+    .description {
+      font-size: 1rem;
+      padding: 1.5rem;
+    }
+  
+    .card-header {
+      padding: 1.25rem 1.5rem;
+    }
+  
+    .card-header h2 {
+      font-size: 1.25rem;
+    }
+  
+    .card-body {
+      padding: 1.5rem;
+    }
+  
+    #plot svg {
+      height: 300px;
+    }
+  
+    .param-group h3 {
+      font-size: 1rem;
+    }
+  
+    .params-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .info-btn::after {
+      width: 220px;
+      font-size: 0.8rem;
+    }
+  }
+  
+  /* ===== Animations ===== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .card {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* ===== Print Styles ===== */
+  @media print {
+    body {
+      background: white;
+    }
+  
+    .site-header {
+      background: var(--color-primary);
+      color: white;
+    }
+  
+    .card {
+      box-shadow: none;
+      border: 1px solid var(--color-border);
+      page-break-inside: avoid;
+    }
+  }

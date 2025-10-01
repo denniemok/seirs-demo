@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SEIRS Model</title>
-    <script type="text/javascript" src="d3.min.js" charset="utf-8">
-    </script>
+    <title>SEIRS Epidemiological Model - Interactive Simulation</title>
+    <meta name="description" content="Interactive SEIRS model simulation for understanding disease spread dynamics">
+    <script type="text/javascript" src="d3.min.js" charset="utf-8"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="seirs.css" />
-    <link rel="stylesheet" type="text/css" href="slider.css" />
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
       TeX: { equationNumbers: {
@@ -15,27 +17,34 @@
         extensions: ["color.js"]
       }}});
     </script>
-    <!-- migrated to new Mathjax CDN -->
     <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   </head>
   <body>
-    <div id="legend">
-      <h1>SEIRS Model</h1>
-      The plot below shows the number of
-      <span class="varS">Susceptible</span>,
-      <span class="varE">Exposed</span>,
-      <span class="varI">Infectious</span>, and
-      <span class="varR">Recovered</span> individuals over time
-      (in days) as percentages of the entire population. This enhanced model includes death rates, vaccination effects, and immunity waning.
-    </div>
-    <div id="plot-container">
-      <div id="plot">
+    <header class="site-header">
+      <div class="container">
+        <h1 class="site-title">SEIRS Epidemiological Model</h1>
+        <p class="site-subtitle">Interactive Disease Spread Simulation</p>
       </div>
-    </div>
-    <div id="model-container">
-    <div id="model-eqns">
-      <h2>Equations</h2>
-      <script type="math/tex; mode=display">% <![CDATA[
+    </header>
+
+    <main class="main-content">
+      <section id="legend" class="info-section">
+        <div class="container">
+          <div class="info-card">
+            <div class="description-text">
+              <p class="description">
+                This interactive visualization demonstrates the dynamics of disease spread using the SEIRS model. 
+                Track how <span class="varS badge">Susceptible</span>, 
+                <span class="varE badge">Exposed</span>, 
+                <span class="varI badge">Infectious</span>, and 
+                <span class="varR badge">Recovered</span> populations evolve over time. 
+                The enhanced model incorporates death rates, vaccination effects, and immunity waning for realistic epidemic modeling.
+              </p>
+            </div>
+            <div class="equations-inline">
+              <h3>Mathematical Model</h3>
+              <div id="model-eqns-inline">
+                <script type="math/tex; mode=display">% <![CDATA[
   \begin{align*}
     \frac{d\class{varS}{S}}{dt} &= -\beta \class{varS}{S} \class{varI}{I} + \omega \class{varR}{R} - \mu \class{varS}{S} + \mu(1-p) \\
     \frac{d\class{varE}{E}}{dt} &= \beta \class{varS}{S} \class{varI}{I} - \sigma \class{varE}{E} - \mu \class{varE}{E} \\
@@ -48,65 +57,148 @@
     R_0 &= p \\
     \end{align*}
    %]]></script>
-    </div>
-    <div id="model-params">
-      <h2>Parameters</h2>
-      <span class="plot-control">
-        <input id="n_days" type="range" min="0" max="0" />
-        <label for="n_days">X Axis:</label>
-        <span class="show_value"></span> days
-      </span>
-      <span class="plot-control">
-        <input id="y_max" type="range" min="0" max="0" />
-        <label for="y_max">Y Axis:</label>
-        <span class="show_value"></span>%
-      </span>
-        <span class="plot-control">
-          <input id="S0" type="range" min="0" max="0" />
-          <label for="S0">Initial Susceptibility, S<sub>i</sub>:</label>
-          <span class="show_value"></span>
-        </span>
-      <span class="plot-control">
-        <input id="R0" type="range" min="0" max="0" />
-        <label for="R0">Basic Reproduction Number, R<sub>0</sub>:</label>
-        <span class="show_value"></span>
-      </span>
-        <span class="plot-control">
-          <input id="infectious_period" type="range" min="0" max="0" />
-          <label for="infectious_period">Infectious Period, 1/γ:</label>
-          <span class="show_value"></span>
-        </span>
-        <span class="plot-control">
-          <input id="latent_period" type="range" min="0" max="0" />
-          <label for="latent_period">Latent Period, 1/σ:</label>
-          <span class="show_value"></span>
-        </span>
-      <span class="plot-control">
-        <input id="immunity_duration" type="range" min="0" max="0" />
-        <label for="immunity_duration">Immunity Duration, 1/ω:</label>
-        <span class="show_value"></span>
-      </span>
-      <span class="plot-control">
-        <input id="life_expectancy" type="range" min="0" max="0" />
-        <label for="life_expectancy">Life Expectancy, 1/μ:</label>
-        <span class="show_value"></span>
-      </span>
-      <span class="plot-control">
-        <input id="death_onset" type="range" min="0" max="0" />
-        <label for="death_onset">Death Onset, 1/α:</label>
-        <span class="show_value"></span>
-      </span>
-      <span class="plot-control">
-        <input id="vaccination_rate" type="range" min="0" max="0" />
-        <label for="vaccination_rate">Vaccination Rate, p:</label>
-        <span class="show_value"></span>
-      </span>
-    </div>
-    </div>
-    <div id="footer">
-      Built based on <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
-      <a href="https://github.com/martinkrz/posepi2">posepi2</a>.
-    </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="plot-section">
+        <div class="container">
+          <div class="card">
+            <div class="card-header">
+              <h2>Population Dynamics Over Time</h2>
+            </div>
+            <div id="plot-container">
+              <div id="plot"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="controls-section">
+        <div class="container">
+          <div class="card parameters-card">
+            <div class="card-header">
+              <h2>Model Parameters</h2>
+              <p class="card-subtitle">Adjust the sliders to modify simulation parameters</p>
+            </div>
+            <div id="model-params" class="card-body">
+              <div class="param-group">
+                <h3>Display Settings</h3>
+                <div class="params-grid">
+                  <span class="plot-control">
+                    <label for="n_days">
+                      Time Range (days)
+                      <button class="info-btn" data-tooltip="Sets the time period (in days) displayed on the X-axis of the simulation">ⓘ</button>
+                    </label>
+                    <input id="n_days" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="y_max">
+                      Y-Axis Scale (%)
+                      <button class="info-btn" data-tooltip="Sets the maximum percentage value displayed on the Y-axis">ⓘ</button>
+                    </label>
+                    <input id="y_max" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="param-group">
+                <h3>Initial Conditions</h3>
+                <div class="params-grid">
+                  <span class="plot-control">
+                    <label for="S0">
+                      Initial Susceptibility (S<sub>i</sub>)
+                      <button class="info-btn" data-tooltip="The initial proportion of the population that is susceptible to the disease">ⓘ</button>
+                    </label>
+                    <input id="S0" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="vaccination_rate">
+                      Vaccination Rate (p)
+                      <button class="info-btn" data-tooltip="The proportion of the population that is vaccinated and starts in the recovered state">ⓘ</button>
+                    </label>
+                    <input id="vaccination_rate" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="param-group">
+                <h3>Disease Characteristics</h3>
+                <div class="params-grid">
+                  <span class="plot-control">
+                    <label for="R0">
+                      Basic Reproduction Number (R<sub>0</sub>)
+                      <button class="info-btn" data-tooltip="Average number of people an infected person will transmit the disease to in a fully susceptible population">ⓘ</button>
+                    </label>
+                    <input id="R0" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="latent_period">
+                      Latent Period (1/σ)
+                      <button class="info-btn" data-tooltip="Average time (in days) between exposure to the disease and becoming infectious">ⓘ</button>
+                    </label>
+                    <input id="latent_period" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="infectious_period">
+                      Infectious Period (1/γ)
+                      <button class="info-btn" data-tooltip="Average time (in days) that an infected person remains infectious">ⓘ</button>
+                    </label>
+                    <input id="infectious_period" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="immunity_duration">
+                      Immunity Duration (1/ω)
+                      <button class="info-btn" data-tooltip="Average time (in days) that immunity lasts before a recovered person becomes susceptible again">ⓘ</button>
+                    </label>
+                    <input id="immunity_duration" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="param-group">
+                <h3>Demographic Factors</h3>
+                <div class="params-grid">
+                  <span class="plot-control">
+                    <label for="life_expectancy">
+                      Life Expectancy (1/μ)
+                      <button class="info-btn" data-tooltip="Average lifespan (in years) of individuals in the population, affecting natural birth and death rates">ⓘ</button>
+                    </label>
+                    <input id="life_expectancy" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
+                    <label for="death_onset">
+                      Disease-Induced Death Rate (1/α)
+                      <button class="info-btn" data-tooltip="Average time until death for infected individuals who die from the disease">ⓘ</button>
+                    </label>
+                    <input id="death_onset" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer">
+      <div class="container">
+        <p>Built based on <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
+        <a href="https://github.com/martinkrz/posepi2">posepi2</a></p>
+      </div>
+    </footer>
 
     <script type="module">
       import { solve, plot } from './seirs.js';
