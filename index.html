@@ -42,7 +42,11 @@
     \frac{d\class{varI}{I}}{dt} &= \sigma \class{varE}{E} - \gamma \class{varI}{I} - (\mu + \alpha) \class{varI}{I} \\
     \frac{d\class{varR}{R}}{dt} &= \gamma \class{varI}{I} - \omega \class{varR}{R} - \mu \class{varR}{R} + \mu p \\
     R_0 &= \frac{\sigma}{\sigma + \mu} \frac{\beta}{\gamma + \mu + \alpha} \\
-  \end{align*}
+    S_0 &= S_i - p \\
+    E_0 &= 1 - S_i \\
+    I_0 &= 0 \\
+    R_0 &= p \\
+    \end{align*}
    %]]></script>
     </div>
     <div id="model-params">
@@ -59,7 +63,7 @@
       </span>
         <span class="plot-control">
           <input id="S0" type="range" min="0" max="0" />
-          <label for="S0">Initial Susceptibility, S<sub>0</sub>:</label>
+          <label for="S0">Initial Susceptibility, S<sub>i</sub>:</label>
           <span class="show_value"></span>
         </span>
       <span class="plot-control">
@@ -100,7 +104,8 @@
     </div>
     </div>
     <div id="footer">
-      <a href="https://bitbucket.org/robmoss/seir-demo-javascript">Available on Bitbucket</a>
+      Built based on <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
+      <a href="https://github.com/martinkrz/posepi2">posepi2</a>.
     </div>
 
     <script type="module">
