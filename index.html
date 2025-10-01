@@ -30,34 +30,14 @@
     <main class="main-content">
       <section id="legend" class="info-section">
         <div class="container">
-          <div class="info-card">
+          <div class="card info-card">
             <div class="description-text">
               <p class="description">
-                This interactive visualization demonstrates the dynamics of disease spread using the SEIRS model. 
-                Track how <span class="varS badge">Susceptible</span>, 
-                <span class="varE badge">Exposed</span>, 
-                <span class="varI badge">Infectious</span>, and 
-                <span class="varR badge">Recovered</span> populations evolve over time. 
-                The enhanced model incorporates death rates, vaccination effects, and immunity waning for realistic epidemic modeling.
+                Explore how an outbreak unfolds with our interactive SEIRS visualizer.
+                It uses a deterministic, mean-field model with uniform mixing (everyone is equally likely to interact) to show
+                how the <span class="varS">Susceptible</span>, <span class="varE">Exposed</span>, <span class="varI">Infectious</span>, and <span class="varR">Recovered</span> groups change over time.
+                The simulation also factors in deaths, vaccination, and waning immunity for a more realistic picture of epidemic dynamics.
               </p>
-            </div>
-            <div class="equations-inline">
-              <h3>Mathematical Model</h3>
-              <div id="model-eqns-inline">
-                <script type="math/tex; mode=display">% <![CDATA[
-  \begin{align*}
-    \frac{d\class{varS}{S}}{dt} &= -\beta \class{varS}{S} \class{varI}{I} + \omega \class{varR}{R} - \mu \class{varS}{S} + \mu(1-p) \\
-    \frac{d\class{varE}{E}}{dt} &= \beta \class{varS}{S} \class{varI}{I} - \sigma \class{varE}{E} - \mu \class{varE}{E} \\
-    \frac{d\class{varI}{I}}{dt} &= \sigma \class{varE}{E} - \gamma \class{varI}{I} - (\mu + \alpha) \class{varI}{I} \\
-    \frac{d\class{varR}{R}}{dt} &= \gamma \class{varI}{I} - \omega \class{varR}{R} - \mu \class{varR}{R} + \mu p \\
-    R_0 &= \frac{\sigma}{\sigma + \mu} \frac{\beta}{\gamma + \mu + \alpha} \\
-    S_0 &= S_i - p \\
-    E_0 &= 1 - S_i \\
-    I_0 &= 0 \\
-    R_0 &= p \\
-    \end{align*}
-   %]]></script>
-              </div>
             </div>
           </div>
         </div>
@@ -67,10 +47,17 @@
         <div class="container">
           <div class="card">
             <div class="card-header">
-              <h2>Population Dynamics Over Time</h2>
+              <h2>Dynamics</h2>
+              <p class="card-subtitle">Preview the trajectories of infection spread</p>
             </div>
-            <div id="plot-container">
+            <div class="card-body">
               <div id="plot"></div>
+              <center>
+                <span class="varS badge">Susceptible</span>
+                <span class="varE badge">Exposed</span> 
+                <span class="varI badge">Infectious</span> 
+                <span class="varR badge">Recovered</span>
+              </center>
             </div>
           </div>
         </div>
@@ -80,17 +67,17 @@
         <div class="container">
           <div class="card parameters-card">
             <div class="card-header">
-              <h2>Model Parameters</h2>
+              <h2>Parameters</h2>
               <p class="card-subtitle">Adjust the sliders to modify simulation parameters</p>
             </div>
             <div id="model-params" class="card-body">
               <div class="param-group">
-                <h3>Display Settings</h3>
+                <!-- <h3>Display Settings</h3> -->
                 <div class="params-grid">
                   <span class="plot-control">
                     <label for="n_days">
-                      Time Range (days)
-                      <button class="info-btn" data-tooltip="Sets the time period (in days) displayed on the X-axis of the simulation">ⓘ</button>
+                      X-Axis Scale (days)
+                      <button class="info-btn" data-tooltip="Time period (in days) to be displayed on the X-axis; Time steps for the simulation">ⓘ</button>
                     </label>
                     <input id="n_days" type="range" min="0" max="0" />
                     <span class="show_value"></span>
@@ -98,80 +85,54 @@
                   <span class="plot-control">
                     <label for="y_max">
                       Y-Axis Scale (%)
-                      <button class="info-btn" data-tooltip="Sets the maximum percentage value displayed on the Y-axis">ⓘ</button>
+                      <button class="info-btn" data-tooltip="Maximum fraction of the population (in %) to be displayed on the Y-axis">ⓘ</button>
                     </label>
                     <input id="y_max" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
-                </div>
-              </div>
-
-              <div class="param-group">
-                <h3>Initial Conditions</h3>
-                <div class="params-grid">
                   <span class="plot-control">
                     <label for="S0">
-                      Initial Susceptibility (S<sub>i</sub>)
-                      <button class="info-btn" data-tooltip="The initial proportion of the population that is susceptible to the disease">ⓘ</button>
+                      Initial Susceptibility (%)
+                      <button class="info-btn" data-tooltip="Initial proportion of the population (in %) that is susceptible to the disease">ⓘ</button>
                     </label>
                     <input id="S0" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
-                    <label for="vaccination_rate">
-                      Vaccination Rate (p)
-                      <button class="info-btn" data-tooltip="The proportion of the population that is vaccinated and starts in the recovered state">ⓘ</button>
-                    </label>
-                    <input id="vaccination_rate" type="range" min="0" max="0" />
-                    <span class="show_value"></span>
-                  </span>
-                </div>
-              </div>
-
-              <div class="param-group">
-                <h3>Disease Characteristics</h3>
-                <div class="params-grid">
-                  <span class="plot-control">
                     <label for="R0">
-                      Basic Reproduction Number (R<sub>0</sub>)
+                      Basic Reproduction Number
                       <button class="info-btn" data-tooltip="Average number of people an infected person will transmit the disease to in a fully susceptible population">ⓘ</button>
                     </label>
                     <input id="R0" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
-                    <label for="latent_period">
-                      Latent Period (1/σ)
-                      <button class="info-btn" data-tooltip="Average time (in days) between exposure to the disease and becoming infectious">ⓘ</button>
-                    </label>
-                    <input id="latent_period" type="range" min="0" max="0" />
-                    <span class="show_value"></span>
-                  </span>
-                  <span class="plot-control">
                     <label for="infectious_period">
-                      Infectious Period (1/γ)
+                      Infectious Period (days)
                       <button class="info-btn" data-tooltip="Average time (in days) that an infected person remains infectious">ⓘ</button>
                     </label>
                     <input id="infectious_period" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
+                    <label for="latent_period">
+                      Incubation Period (days)
+                      <button class="info-btn" data-tooltip="Average time (in days) between exposure to the disease and becoming infectious">ⓘ</button>
+                    </label>
+                    <input id="latent_period" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                  <span class="plot-control">
                     <label for="immunity_duration">
-                      Immunity Duration (1/ω)
-                      <button class="info-btn" data-tooltip="Average time (in days) that immunity lasts before a recovered person becomes susceptible again">ⓘ</button>
+                      Immunity Duration (years)
+                      <button class="info-btn" data-tooltip="Average time (in days) that immunity lasts before a recovered person becomes susceptible again; 0 for permanent immunity">ⓘ</button>
                     </label>
                     <input id="immunity_duration" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
-                </div>
-              </div>
-
-              <div class="param-group">
-                <h3>Demographic Factors</h3>
-                <div class="params-grid">
                   <span class="plot-control">
                     <label for="life_expectancy">
-                      Life Expectancy (1/μ)
+                      Life Expectancy (years)
                       <button class="info-btn" data-tooltip="Average lifespan (in years) of individuals in the population, affecting natural birth and death rates">ⓘ</button>
                     </label>
                     <input id="life_expectancy" type="range" min="0" max="0" />
@@ -179,12 +140,106 @@
                   </span>
                   <span class="plot-control">
                     <label for="death_onset">
-                      Disease-Induced Death Rate (1/α)
-                      <button class="info-btn" data-tooltip="Average time until death for infected individuals who die from the disease">ⓘ</button>
+                      Infection-to-Death Period (days)
+                      <button class="info-btn" data-tooltip="Average time (in days) until death for infected individuals; 0 for no deaths">ⓘ</button>
                     </label>
                     <input id="death_onset" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
+                  <span class="plot-control">
+                    <label for="vaccination_rate">
+                      Vaccination Rate (%)
+                      <button class="info-btn" data-tooltip="Proportion  of the population (in %) that is vaccinated and starts in the recovered state">ⓘ</button>
+                    </label>
+                    <input id="vaccination_rate" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card equations-card">
+            <div class="card-header expandable-header" onclick="toggleEquations()">
+              <div class="header-content">
+                <div><h2>Equations</h2><p class="card-subtitle">Review the theories that power this model</p></div>
+                <span class="expand-icon" id="expand-icon">▼</span>
+              </div>
+            </div>
+            <div id="equations-content" class="card-body equations-body" style="display: none;">
+              <div id="model-eqns">
+                <div class="param-group">
+                  <h3>Disease States</h3>
+                  <p class="description">
+                    SEIRS is a standard compartmental model that divides the population into Susceptible (S), Exposed (E), Infectious (I), and Recovered (R) groups.
+                    Susceptible individuals become Exposed after a transmissive contact with someone Infectious, then progress to the Infectious state following an
+                    incubation period, and eventually move to the Recovered state. Over time, Recovered individuals may lose immunity and become Susceptible again.
+                  </p>
+                </div>
+                <div class="param-group">
+                  <h3>Differential Equations</h3>
+                  <p class="description">
+                    The SEIRS model's dynamics are governed by a system of differential equations in a deterministic, mean-field framework, following standard
+                    epidemiological compartment models. This approach assumes a homogeneous population (everyone shares the same rates and parameters) and uniform
+                    mixing (every individual is equally likely to interact with every other), which together simplify how disease spread is modeled.
+                  </p>
+                  <br>
+                  <script type="math/tex; mode=display">
+                    % <![CDATA[
+                    \begin{align*}
+                      \frac{d\class{varS}{S}}{dt} &= -\beta \class{varS}{S} \class{varI}{I} + \omega \class{varR}{R} - \mu \class{varS}{S} + \mu(1-p) \\
+                      \frac{d\class{varE}{E}}{dt} &= \beta \class{varS}{S} \class{varI}{I} - \sigma \class{varE}{E} - \mu \class{varE}{E} \\
+                      \frac{d\class{varI}{I}}{dt} &= \sigma \class{varE}{E} - \gamma \class{varI}{I} - (\mu + \alpha) \class{varI}{I} \\
+                      \frac{d\class{varR}{R}}{dt} &= \gamma \class{varI}{I} - \omega \class{varR}{R} - \mu \class{varR}{R} + \mu p \\
+                    \end{align*}
+                    %]]>
+                  </script>
+                </div>
+                <div class="param-group">
+                  <h3>Mean Parameters</h3>
+                  <p class="description">
+                    Disease can spread when a Susceptible person contacts someone Infectious. The chance that this contact leads to infection is proportional
+                    to the infectious person's transmissibility, β. This β parameter is linked to the basic reproduction number, R0 — the expected number of new
+                    infections caused by one Infectious individual in a fully Susceptible population.
+                  </p>
+                  <br>
+                  <script type="math/tex; mode=display">
+                    % <![CDATA[
+                    \begin{align*}
+                      \text{transmissibility} &= \beta \\
+                      \text{basic reproduction number} &= R_0 = \frac{\sigma}{\sigma + \mu} \frac{\beta}{\gamma + \mu + \alpha} \\\\
+                      \text{infection-induced mortality rate} &= \alpha \\
+                      \text{infection-to-death period} &= 1 / \alpha \\\\
+                      \text{progression rate} &= \sigma \\
+                      \text{incubation period} &= 1 / \sigma \\\\
+                      \text{recovery rate} &= \gamma \\
+                      \text{infectious period} &= 1 / \gamma \\\\
+                      \text{re-susceptibility rate} &= \omega \\
+                      \text{immunity duration} &= 1 / \omega \\\\
+                      \text{natural mortality rate} &= \mu \\
+                      \text{life expectancy} &= 1 / \mu \\\\
+                      \text{vaccination rate} &= p \\\\
+                      \text{susceptible fraction} &= S \\
+                      \text{exposed fraction} &= E \\
+                      \text{infectious fraction} &= I \\
+                      \text{recovered fraction} &= R \\
+                      \end{align*}
+                    %]]>
+                  </script>
+                </div>
+                <div class="param-group">
+                  <h3>Initial Parameters</h3>
+                  <script type="math/tex; mode=display">
+                    % <![CDATA[
+                    \begin{align*}
+                      S_0 &= S_i - p \\
+                      E_0 &= 1 - S_i \\
+                      I_0 &= 0 \\
+                      R_0 &= p \\
+                      S + E + I + R &= 1 \\
+                    \end{align*}
+                    %]]>
+                  </script>
                 </div>
               </div>
             </div>
@@ -196,7 +251,7 @@
     <footer id="footer">
       <div class="container">
         <p>Built based on <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
-        <a href="https://github.com/martinkrz/posepi2">posepi2</a></p>
+        <a href="https://github.com/martinkrz/posepi2">posepi2</a>.</p>
       </div>
     </footer>
 
@@ -205,6 +260,25 @@
       import { param_vals } from './params.js';
       
       plot('#plot', '#model-params', param_vals);
+    </script>
+
+    <script>
+      function toggleEquations() {
+        const content = document.getElementById('equations-content');
+        const icon = document.getElementById('expand-icon');
+        
+        if (content.style.display === 'none') {
+          content.style.display = 'block';
+          icon.textContent = '▲';
+          // Trigger MathJax to re-render equations
+          if (typeof MathJax !== 'undefined') {
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, "model-eqns"]);
+          }
+        } else {
+          content.style.display = 'none';
+          icon.textContent = '▼';
+        }
+      }
     </script>
   </body>
 </html>

@@ -101,7 +101,7 @@ class SEIRParameters {
         this.gamma = 1 / infectious_period;
         
         // Immunity waning rate (convert years to days)
-        this.omega = 1 / (CONSTANTS.DAYS_PER_YEAR * immunity_duration);
+        this.omega = immunity_duration > 0 ? 1 / (CONSTANTS.DAYS_PER_YEAR * immunity_duration) : 0;
         
         // Natural death/birth rate (convert years to days)
         this.mu = 1 / (CONSTANTS.DAYS_PER_YEAR * life_expectancy);
@@ -269,7 +269,7 @@ export const solve = (
     ParameterValidator.validatePositive(R0, 'R0');
     ParameterValidator.validatePositive(infectious_period, 'Infectious period');
     ParameterValidator.validatePositive(latent_period, 'Latent period');
-    ParameterValidator.validatePositive(immunity_duration, 'Immunity duration');
+    ParameterValidator.validateNonNegative(immunity_duration, 'Immunity duration');
     ParameterValidator.validatePositive(life_expectancy, 'Life expectancy');
     ParameterValidator.validateNonNegative(death_onset, 'Death onset');
     ParameterValidator.validateRange(vaccination_rate, 0, 1, 'Vaccination rate');
@@ -334,7 +334,7 @@ class PlotConfiguration {
         this.ctrls = d3.select(ctrl_id);
         
         // Plot layout configuration
-        this.margin = { top: 20, right: 20, bottom: 30, left: 80 };
+        this.margin = { top: 20, right: 30, bottom: 30, left: 50 };
         this.axis_width = 2;
         
         // Default parameter values
@@ -557,7 +557,7 @@ class PlotRenderer {
             .scale(plot.y_range)
             .orient('left')
             .tickSize(0)
-            .tickFormat(d => `${d}%`)
+            .tickFormat(d => `${d}`)
             .ticks(4);
     }
 
@@ -621,7 +621,7 @@ class PlotRenderer {
                 .attr('class', 'y tick');
         }
         plot.y_ticks
-            .attr('transform', `translate(${0.7 * plot.margin.left},0)`)
+            .attr('transform', `translate(${0.8 * plot.margin.left},0)`)
             .call(plot.y_axis);
     }
 
