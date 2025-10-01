@@ -1,305 +1,347 @@
 // Enhanced SEIR model implementation with death rates, vaccination, and immunity waning
-export const solve = (S0, R0, latent_period, infectious_period, n, 
-                      death_onset = 100, immunity_duration = 1, life_expectancy = 76, 
-                      vaccination_rate = 0.5) => {
+
+// Constants
+const DAYS_PER_YEAR = 365;
+const PERCENTAGE_SCALE = 100;
+const RK4_WEIGHT_MIDDLE = 2;
+const RK4_WEIGHT_DIVISOR = 6;
+const RK4_HALF_STEP = 0.5;
+
+// Validation helpers
+const validateParameter = (value, min, max, name) => {
+    if (value < min || value > max) {
+        throw new Error(`${name} must be between ${min} and ${max}`);
+    }
+};
+
+const validatePositive = (value, name) => {
+    if (value <= 0) {
+        throw new Error(`${name} must be positive`);
+    }
+};
+
+const validateNonNegative = (value, name) => {
+    if (value < 0) {
+        throw new Error(`${name} must be non-negative`);
+    }
+};
+
+// Model parameters calculator
+class SEIRParameters {
+    constructor(R0, infectious_period, latent_period, death_onset, immunity_duration, life_expectancy) {
+        this.alpha = death_onset > 0 ? 1 / death_onset : 0; // Death rate from infection
+        this.gamma = 1 / infectious_period; // Recovery rate
+        this.omega = 1 / (DAYS_PER_YEAR * immunity_duration); // Immunity waning rate
+        this.mu = 1 / (DAYS_PER_YEAR * life_expectancy); // Natural death rate
+        this.sigma = 1 / latent_period; // Latent to infectious rate
+        this.beta = R0 * (this.gamma + this.mu + this.alpha) * (this.sigma + this.mu) / this.sigma; // Transmission rate
+    }
+}
+
+// SEIR state transitions
+class SEIRTransitions {
+    constructor(params, vaccination_rate) {
+        this.params = params;
+        this.p = vaccination_rate;
+    }
+
+    susceptibleToExposed(s, i) {
+        return this.params.beta * s * i;
+    }
+
+    exposedToInfectious(e) {
+        return this.params.sigma * e;
+    }
+
+    infectiousToRecovered(i) {
+        return this.params.gamma * i;
+    }
+
+    recoveredToSusceptible(r) {
+        return this.params.omega * r;
+    }
+
+    susceptibleDeath(s) {
+        return this.params.mu * s;
+    }
+
+    exposedDeath(e) {
+        return this.params.mu * e;
+    }
+
+    infectiousDeath(i) {
+        return (this.params.mu + this.params.alpha) * i;
+    }
+
+    recoveredDeath(r) {
+        return this.params.mu * r;
+    }
+
+    birthSusceptible() {
+        return this.params.mu * (1 - this.p);
+    }
+
+    birthVaccinated() {
+        return this.params.mu * this.p;
+    }
+
+    // Calculate derivatives for each compartment
+    calculateDerivatives(s, e, i, r) {
+        const s_to_e = this.susceptibleToExposed(s, i);
+        const e_to_i = this.exposedToInfectious(e);
+        const i_to_r = this.infectiousToRecovered(i);
+        const r_to_s = this.recoveredToSusceptible(r);
+
+        return {
+            ds: -s_to_e + r_to_s - this.susceptibleDeath(s) + this.birthSusceptible(),
+            de: s_to_e - e_to_i - this.exposedDeath(e),
+            di: e_to_i - i_to_r - this.infectiousDeath(i),
+            dr: i_to_r - r_to_s - this.recoveredDeath(r) + this.birthVaccinated()
+        };
+    }
+}
+
+// Runge-Kutta 4th order integrator
+class RK4Integrator {
+    constructor(transitions) {
+        this.transitions = transitions;
+    }
+
+    step(state, h) {
+        const [s, e, i, r] = state;
+
+        // k1 = f(x, t)
+        const k1 = this.transitions.calculateDerivatives(s, e, i, r);
+
+        // k2 = f(x + 0.5*h*k1, t + 0.5*h)
+        const k2 = this.transitions.calculateDerivatives(
+            s + RK4_HALF_STEP * h * k1.ds,
+            e + RK4_HALF_STEP * h * k1.de,
+            i + RK4_HALF_STEP * h * k1.di,
+            r + RK4_HALF_STEP * h * k1.dr
+        );
+
+        // k3 = f(x + 0.5*h*k2, t + 0.5*h)
+        const k3 = this.transitions.calculateDerivatives(
+            s + RK4_HALF_STEP * h * k2.ds,
+            e + RK4_HALF_STEP * h * k2.de,
+            i + RK4_HALF_STEP * h * k2.di,
+            r + RK4_HALF_STEP * h * k2.dr
+        );
+
+        // k4 = f(x + h*k3, t + h)
+        const k4 = this.transitions.calculateDerivatives(
+            s + h * k3.ds,
+            e + h * k3.de,
+            i + h * k3.di,
+            r + h * k3.dr
+        );
+
+        // Update using RK4 formula: x_new = x + (h/6) * (k1 + 2*k2 + 2*k3 + k4)
+        return [
+            s + (h / RK4_WEIGHT_DIVISOR) * (k1.ds + RK4_WEIGHT_MIDDLE * k2.ds + RK4_WEIGHT_MIDDLE * k3.ds + k4.ds),
+            e + (h / RK4_WEIGHT_DIVISOR) * (k1.de + RK4_WEIGHT_MIDDLE * k2.de + RK4_WEIGHT_MIDDLE * k3.de + k4.de),
+            i + (h / RK4_WEIGHT_DIVISOR) * (k1.di + RK4_WEIGHT_MIDDLE * k2.di + RK4_WEIGHT_MIDDLE * k3.di + k4.di),
+            r + (h / RK4_WEIGHT_DIVISOR) * (k1.dr + RK4_WEIGHT_MIDDLE * k2.dr + RK4_WEIGHT_MIDDLE * k3.dr + k4.dr)
+        ];
+    }
+}
+
+// Clamp value between 0 and 1
+const clamp = (value) => Math.max(0, Math.min(1, value));
+
+// Main solver function
+export const solve = (
+    S0,
+    R0,
+    latent_period,
+    infectious_period,
+    n,
+    death_onset = 100,
+    immunity_duration = 1,
+    life_expectancy = 76,
+    vaccination_rate = 0.5
+) => {
     // Parameter validation
-    if (n <= 0) throw new Error('Number of time steps must be positive');
-    if (S0 < 0 || S0 > 1) throw new Error('Initial susceptibility must be between 0 and 1');
-    if (R0 <= 0) throw new Error('R0 must be positive');
-    if (infectious_period <= 0) throw new Error('Infectious period must be positive');
-    if (latent_period <= 0) throw new Error('Latent period must be positive');
-    if (immunity_duration <= 0) throw new Error('Immunity duration must be positive');
-    if (life_expectancy <= 0) throw new Error('Life expectancy must be positive');
-    if (death_onset < 0) throw new Error('Death onset must be non-negative');
-    if (vaccination_rate < 0 || vaccination_rate > 1) throw new Error('Vaccination rate must be between 0 and 1');
+    validatePositive(n, 'Number of time steps');
+    validateParameter(S0, 0, 1, 'Initial susceptibility');
+    validatePositive(R0, 'R0');
+    validatePositive(infectious_period, 'Infectious period');
+    validatePositive(latent_period, 'Latent period');
+    validatePositive(immunity_duration, 'Immunity duration');
+    validatePositive(life_expectancy, 'Life expectancy');
+    validateNonNegative(death_onset, 'Death onset');
+    validateParameter(vaccination_rate, 0, 1, 'Vaccination rate');
+
+    // Initialize state arrays
     const s = new Float64Array(n + 1);
     const e = new Float64Array(n + 1);
     const i = new Float64Array(n + 1);
     const r = new Float64Array(n + 1);
-    
-    // Calculate derived parameters
-    const alpha = death_onset > 0 ? 1 / death_onset : 0; // Death rate from infection
-    const gamma = 1 / infectious_period; // Recovery rate
-    const omega = 1 / (365 * immunity_duration); // Immunity waning rate
-    const mu = 1 / (365 * life_expectancy); // Natural death rate
-    const sigma = 1 / latent_period; // Latent to infectious rate
-    const p = vaccination_rate; // Vaccination rate
-    const beta = R0 * (gamma + mu + alpha) * (sigma + mu) / sigma; // Transmission rate
-    
-    // Initial conditions
-    s[0] = S0 - p; // Account for vaccination
+
+    // Calculate model parameters
+    const params = new SEIRParameters(R0, infectious_period, latent_period, death_onset, immunity_duration, life_expectancy);
+    const transitions = new SEIRTransitions(params, vaccination_rate);
+    const integrator = new RK4Integrator(transitions);
+
+    // Set initial conditions
+    s[0] = S0 - vaccination_rate; // Account for vaccination
     e[0] = 1.0 - S0;
     i[0] = 0.0;
-    r[0] = p; // Include vaccinated individuals
-
-    // Enhanced ODE equations with death, vaccination, and immunity waning
-    const s_to_e = (s, e, i, r) => beta * s * i;
-    const e_to_i = (s, e, i, r) => sigma * e;
-    const i_to_r = (s, e, i, r) => gamma * i;
-    const r_to_s = (s, e, i, r) => omega * r;
-    const s_death = (s, e, i, r) => mu * s;
-    const e_death = (s, e, i, r) => mu * e;
-    const i_death = (s, e, i, r) => (mu + alpha) * i;
-    const r_death = (s, e, i, r) => mu * r;
-    const birth_susceptible = (s, e, i, r) => mu * (1 - p);
-    const birth_vaccinated = (s, e, i, r) => mu * p;
-
-    // Runge-Kutta 4th order integration
-    const rk4_step = (x, t, h) => {
-        const [s_curr, e_curr, i_curr, r_curr] = x;
-        
-        // k1 = f(x, t)
-        const k1_s = -s_to_e(s_curr, e_curr, i_curr, r_curr) + r_to_s(s_curr, e_curr, i_curr, r_curr) 
-                    - s_death(s_curr, e_curr, i_curr, r_curr) + birth_susceptible(s_curr, e_curr, i_curr, r_curr);
-        const k1_e = s_to_e(s_curr, e_curr, i_curr, r_curr) - e_to_i(s_curr, e_curr, i_curr, r_curr) 
-                    - e_death(s_curr, e_curr, i_curr, r_curr);
-        const k1_i = e_to_i(s_curr, e_curr, i_curr, r_curr) - i_to_r(s_curr, e_curr, i_curr, r_curr) 
-                    - i_death(s_curr, e_curr, i_curr, r_curr);
-        const k1_r = i_to_r(s_curr, e_curr, i_curr, r_curr) - r_to_s(s_curr, e_curr, i_curr, r_curr) 
-                    - r_death(s_curr, e_curr, i_curr, r_curr) + birth_vaccinated(s_curr, e_curr, i_curr, r_curr);
-        
-        // k2 = f(x + 0.5*h*k1, t + 0.5*h)
-        const x_k2 = [s_curr + 0.5*h*k1_s, e_curr + 0.5*h*k1_e, i_curr + 0.5*h*k1_i, r_curr + 0.5*h*k1_r];
-        const k2_s = -s_to_e(...x_k2) + r_to_s(...x_k2) - s_death(...x_k2) + birth_susceptible(...x_k2);
-        const k2_e = s_to_e(...x_k2) - e_to_i(...x_k2) - e_death(...x_k2);
-        const k2_i = e_to_i(...x_k2) - i_to_r(...x_k2) - i_death(...x_k2);
-        const k2_r = i_to_r(...x_k2) - r_to_s(...x_k2) - r_death(...x_k2) + birth_vaccinated(...x_k2);
-        
-        // k3 = f(x + 0.5*h*k2, t + 0.5*h)
-        const x_k3 = [s_curr + 0.5*h*k2_s, e_curr + 0.5*h*k2_e, i_curr + 0.5*h*k2_i, r_curr + 0.5*h*k2_r];
-        const k3_s = -s_to_e(...x_k3) + r_to_s(...x_k3) - s_death(...x_k3) + birth_susceptible(...x_k3);
-        const k3_e = s_to_e(...x_k3) - e_to_i(...x_k3) - e_death(...x_k3);
-        const k3_i = e_to_i(...x_k3) - i_to_r(...x_k3) - i_death(...x_k3);
-        const k3_r = i_to_r(...x_k3) - r_to_s(...x_k3) - r_death(...x_k3) + birth_vaccinated(...x_k3);
-        
-        // k4 = f(x + h*k3, t + h)
-        const x_k4 = [s_curr + h*k3_s, e_curr + h*k3_e, i_curr + h*k3_i, r_curr + h*k3_r];
-        const k4_s = -s_to_e(...x_k4) + r_to_s(...x_k4) - s_death(...x_k4) + birth_susceptible(...x_k4);
-        const k4_e = s_to_e(...x_k4) - e_to_i(...x_k4) - e_death(...x_k4);
-        const k4_i = e_to_i(...x_k4) - i_to_r(...x_k4) - i_death(...x_k4);
-        const k4_r = i_to_r(...x_k4) - r_to_s(...x_k4) - r_death(...x_k4) + birth_vaccinated(...x_k4);
-        
-        // Update using RK4 formula
-        return [
-            s_curr + (h/6) * (k1_s + 2*k2_s + 2*k3_s + k4_s),
-            e_curr + (h/6) * (k1_e + 2*k2_e + 2*k3_e + k4_e),
-            i_curr + (h/6) * (k1_i + 2*k2_i + 2*k3_i + k4_i),
-            r_curr + (h/6) * (k1_r + 2*k2_r + 2*k3_r + k4_r)
-        ];
-    };
+    r[0] = vaccination_rate; // Include vaccinated individuals
 
     // Integrate using RK4
+    const timeStep = 1.0;
     for (let ix = 0; ix < n; ix++) {
-        const h = 1.0; // Time step
-        const [s_new, e_new, i_new, r_new] = rk4_step([s[ix], e[ix], i[ix], r[ix]], ix, h);
-        
-        s[ix + 1] = Math.max(0, Math.min(1, s_new)); // Ensure values stay in [0,1]
-        e[ix + 1] = Math.max(0, Math.min(1, e_new));
-        i[ix + 1] = Math.max(0, Math.min(1, i_new));
-        r[ix + 1] = Math.max(0, Math.min(1, r_new));
+        const [s_new, e_new, i_new, r_new] = integrator.step([s[ix], e[ix], i[ix], r[ix]], timeStep);
+
+        // Ensure values stay in [0,1]
+        s[ix + 1] = clamp(s_new);
+        e[ix + 1] = clamp(e_new);
+        i[ix + 1] = clamp(i_new);
+        r[ix + 1] = clamp(r_new);
     }
 
-    const data_S = [];
-    const data_E = [];
-    const data_I = [];
-    const data_R = [];
+    // Convert results to output format
+    const formatData = (array) => {
+        return Array.from(array, (value, index) => ({
+            x: index,
+            y: PERCENTAGE_SCALE * value
+        }));
+    };
 
-    // Convert from population fractions to percentages.
-    const scale_by = 100;
-
-    for (let ix = 0; ix < n + 1; ix++) {
-        data_S.push({x: ix, y: scale_by * s[ix]});
-        data_E.push({x: ix, y: scale_by * e[ix]});
-        data_I.push({x: ix, y: scale_by * i[ix]});
-        data_R.push({x: ix, y: scale_by * r[ix]});
-    }
-
-    // Return lists of objects for use with D3.
-    return {s: data_S, e: data_E, i: data_I, r: data_R, ymax: scale_by};
+    return {
+        s: formatData(s),
+        e: formatData(e),
+        i: formatData(i),
+        r: formatData(r),
+        ymax: PERCENTAGE_SCALE
+    };
 };
 
+// Plot configuration and management
 export const plot = (plot_id, ctrl_id, param_vals = {}) => {
-    const plot = {};
+    const plot = createPlotObject(plot_id, ctrl_id);
+    
+    initializePlotParameters(plot, param_vals);
+    setupEventHandlers(plot);
+    
+    plot.update();
+};
 
-    plot.svg = d3.select(plot_id).append('svg');
+// Create plot object with initial configuration
+const createPlotObject = (plot_id, ctrl_id) => {
+    const plot = {
+        svg: d3.select(plot_id).append('svg'),
+        ctrls: d3.select(ctrl_id),
+        margin: { top: 20, right: 20, bottom: 30, left: 80 },
+        axis_width: 2,
+        params: {
+            S0: 0.99,
+            R0: 3.0,
+            latent_period: 7.0,
+            infectious_period: 14.0,
+            n_days: 3000,
+            y_max: 100,
+            death_onset: 100,
+            immunity_duration: 1,
+            life_expectancy: 76,
+            vaccination_rate: 0.5
+        }
+    };
 
     const svg_rect = plot.svg.node().getBoundingClientRect();
     plot.width = svg_rect.width;
     plot.height = svg_rect.height;
-    plot.margin = {
-        top: 20,
-        right: 20,
-        bottom: 30,
-        left: 80
-    };
-    plot.axis_width = 2;
-
-    plot.ctrls = d3.select(ctrl_id);
-
-    plot.params = {
-        S0: 0.99,
-        R0: 3.0,
-        latent_period: 7.0, // days
-        infectious_period: 14.0, // days
-        n_days: 3000, // Extended simulation period
-        y_max: 100,
-        death_onset: 100, // days
-        immunity_duration: 1, // years
-        life_expectancy: 76, // years
-        vaccination_rate: 0.5 // 50% vaccination rate
-    };
-
-    // Set parameters to initial form values.
-    const set_param = (update_plot) => {
-        return function() {
-            if (this.id in plot.params) {
-                if (this.type === "range") {
-                    if (this.min === this.max) {
-                        if (this.id in param_vals) {
-                            const values = param_vals[this.id];
-                            this.min = 0;
-                            this.max = values.length - 1;
-                            this.step = 1;
-                            this.data = values;
-                            // Pick the default initial value, if specified.
-                            const def = values.findIndex(v => v.default);
-                            if (def >= 0) {
-                                this.value = def;
-                            }
-                        } else {
-                            console.log(`No values to initialise '${this.id}'`);
-                            return;
-                        }
-                    }
-                    const ix = parseInt(this.value);
-                    // Update the parameter value.
-                    plot.params[this.id] = this.data[ix].value;
-                    // Display the parameter value.
-                    const parent = d3.select(this.parentNode);
-                    const label = parent.select(".show_value")[0][0];
-                    if (this.data[ix].label !== undefined) {
-                        label.textContent = this.data[ix].label;
-                    } else {
-                        label.textContent = this.data[ix].value;
-                    }
-                } else {
-                    plot.params[this.id] = parseFloat(this.value);
-                }
-                if (update_plot) {
-                    plot.update();
-                }
-            } else {
-                console.log(`Form control for unknown parameter '${this.id}'`);
-            }
-        };
-    };
-
-    plot.ctrls.selectAll('select').each(set_param(false));
-    plot.ctrls.selectAll('input').each(set_param(false));
 
     plot.draw_line = d3.svg.line()
         .x(d => plot.x_range(d.x))
         .y(d => plot.y_range(d.y))
         .interpolate('linear');
 
-    plot.update = () => {
-        const output = solve(
-            plot.params.S0,
-            plot.params.R0,
-            plot.params.latent_period,
-            plot.params.infectious_period,
-            plot.params.n_days,
-            plot.params.death_onset,
-            plot.params.immunity_duration,
-            plot.params.life_expectancy,
-            plot.params.vaccination_rate);
+    plot.update = () => updatePlot(plot);
 
-        if (plot.x_range === undefined) {
-            plot.x_range = d3.scale.linear();
-        }
-        plot.x_range
-            .range([plot.margin.left, plot.width - plot.margin.right])
-            .domain([0, plot.params.n_days]);
-        if (plot.y_range === undefined) {
-            plot.y_range = d3.scale.linear();
-        }
-        plot.y_range
-            .range([plot.height - plot.margin.bottom, plot.margin.top])
-            .domain([0, plot.params.y_max]);
-        if (plot.x_axis === undefined) {
-            plot.x_axis = d3.svg.axis();
-        }
-        plot.x_axis
-            .scale(plot.x_range)
-            .ticks(10)
-            .tickSize(0);
-        if (plot.y_axis === undefined) {
-            plot.y_axis = d3.svg.axis();
-        }
-        plot.y_axis
-            .scale(plot.y_range)
-            .orient('left')
-            .tickSize(0)
-            .tickFormat(d => `${d}%`)
-            .ticks(4);
+    return plot;
+};
 
-        // (Re)draw axes.
-        if (plot.x_line === undefined) {
-            plot.x_line = plot.svg.append('svg:line')
-                .attr('class', 'x axis')
-                .attr('stroke-width', plot.axis_width);
-        }
-        plot.x_line
-            .attr("x1", plot.x_range(0) - plot.axis_width)
-            .attr("y1", plot.y_range(0) + plot.axis_width)
-            .attr("x2", plot.x_range(plot.params.n_days))
-            .attr("y2", plot.y_range(0) + plot.axis_width);
-        if (plot.x_ticks === undefined) {
-            plot.x_ticks = plot.svg.append('svg:g')
-                .attr('class', 'x tick');
-        }
-        plot.x_ticks
-            .attr('transform', `translate(0,${plot.height - 0.5 * plot.margin.bottom})`)
-            .call(plot.x_axis);
-        if (plot.y_line === undefined) {
-            plot.y_line = plot.svg.append('svg:line')
-                .attr('class', 'y axis')
-                .attr('stroke-width', plot.axis_width);
-        }
-        plot.y_line
-            .attr("x1", plot.x_range(0) - plot.axis_width)
-            .attr("y1", plot.y_range(0) + plot.axis_width)
-            .attr("x2", plot.x_range(0) - plot.axis_width)
-            .attr("y2", plot.y_range(plot.params.y_max));
-        if (plot.y_ticks === undefined) {
-            plot.y_ticks = plot.svg.append('svg:g')
-                .attr('class', 'y tick');
-        }
-        plot.y_ticks
-            .attr('transform', `translate(${0.7 * plot.margin.left},0)`)
-            .call(plot.y_axis);
+// Initialize plot parameters from form controls
+const initializePlotParameters = (plot, param_vals) => {
+    const setParam = createParamSetter(plot, param_vals);
+    
+    plot.ctrls.selectAll('select').each(setParam(false));
+    plot.ctrls.selectAll('input').each(setParam(false));
+};
 
-        // Remove existing data series.
-        plot.svg.selectAll('path.series').remove();
+// Create parameter setter function
+const createParamSetter = (plot, param_vals) => {
+    return (update_plot) => {
+        return function() {
+            if (!(this.id in plot.params)) {
+                console.log(`Form control for unknown parameter '${this.id}'`);
+                return;
+            }
 
-        plot.svg.append('svg:path')
-            .attr('d', plot.draw_line(output.s))
-            .attr('class', 'varS series');
-        plot.svg.append('svg:path')
-            .attr('d', plot.draw_line(output.e))
-            .attr('class', 'varE series');
-        plot.svg.append('svg:path')
-            .attr('d', plot.draw_line(output.i))
-            .attr('class', 'varI series');
-        plot.svg.append('svg:path')
-            .attr('d', plot.draw_line(output.r))
-            .attr('class', 'varR series');
+            if (this.type === "range") {
+                handleRangeInput(this, plot, param_vals);
+            } else {
+                plot.params[this.id] = parseFloat(this.value);
+            }
+
+            if (update_plot) {
+                plot.update();
+            }
+        };
     };
+};
 
-    // Add update handlers for each input element.
-    plot.ctrls.selectAll('select').on("change.param_val", set_param(true));
-    plot.ctrls.selectAll('input').on("change.param_val", set_param(true));
-    plot.ctrls.selectAll('input').on("input.param_val", set_param(true));
+// Handle range input controls
+const handleRangeInput = (input, plot, param_vals) => {
+    if (input.min === input.max) {
+        if (!initializeRangeInput(input, param_vals)) {
+            return;
+        }
+    }
+
+    const ix = parseInt(input.value);
+    plot.params[input.id] = input.data[ix].value;
+
+    // Display the parameter value
+    const parent = d3.select(input.parentNode);
+    const label = parent.select(".show_value")[0][0];
+    label.textContent = input.data[ix].label !== undefined 
+        ? input.data[ix].label 
+        : input.data[ix].value;
+};
+
+// Initialize range input with values
+const initializeRangeInput = (input, param_vals) => {
+    if (!(input.id in param_vals)) {
+        console.log(`No values to initialise '${input.id}'`);
+        return false;
+    }
+
+    const values = param_vals[input.id];
+    input.min = 0;
+    input.max = values.length - 1;
+    input.step = 1;
+    input.data = values;
+
+    // Pick the default initial value, if specified
+    const def = values.findIndex(v => v.default);
+    if (def >= 0) {
+        input.value = def;
+    }
+
+    return true;
+};
+
+// Setup event handlers for plot controls
+const setupEventHandlers = (plot) => {
+    const setParam = createParamSetter(plot, {});
+    
+    plot.ctrls.selectAll('select').on("change.param_val", setParam(true));
+    plot.ctrls.selectAll('input').on("change.param_val", setParam(true));
+    plot.ctrls.selectAll('input').on("input.param_val", setParam(true));
 
     d3.select(window).on('resize', () => {
         const svg_rect = plot.svg.node().getBoundingClientRect();
@@ -307,6 +349,123 @@ export const plot = (plot_id, ctrl_id, param_vals = {}) => {
         plot.height = svg_rect.height;
         plot.update();
     });
+};
 
-    plot.update();
+// Update plot with current parameters
+const updatePlot = (plot) => {
+    const output = solve(
+        plot.params.S0,
+        plot.params.R0,
+        plot.params.latent_period,
+        plot.params.infectious_period,
+        plot.params.n_days,
+        plot.params.death_onset,
+        plot.params.immunity_duration,
+        plot.params.life_expectancy,
+        plot.params.vaccination_rate
+    );
+
+    updateScales(plot);
+    updateAxes(plot);
+    drawDataSeries(plot, output);
+};
+
+// Update plot scales
+const updateScales = (plot) => {
+    if (plot.x_range === undefined) {
+        plot.x_range = d3.scale.linear();
+    }
+    plot.x_range
+        .range([plot.margin.left, plot.width - plot.margin.right])
+        .domain([0, plot.params.n_days]);
+
+    if (plot.y_range === undefined) {
+        plot.y_range = d3.scale.linear();
+    }
+    plot.y_range
+        .range([plot.height - plot.margin.bottom, plot.margin.top])
+        .domain([0, plot.params.y_max]);
+
+    if (plot.x_axis === undefined) {
+        plot.x_axis = d3.svg.axis();
+    }
+    plot.x_axis
+        .scale(plot.x_range)
+        .ticks(10)
+        .tickSize(0);
+
+    if (plot.y_axis === undefined) {
+        plot.y_axis = d3.svg.axis();
+    }
+    plot.y_axis
+        .scale(plot.y_range)
+        .orient('left')
+        .tickSize(0)
+        .tickFormat(d => `${d}%`)
+        .ticks(4);
+};
+
+// Update plot axes
+const updateAxes = (plot) => {
+    // X-axis line
+    if (plot.x_line === undefined) {
+        plot.x_line = plot.svg.append('svg:line')
+            .attr('class', 'x axis')
+            .attr('stroke-width', plot.axis_width);
+    }
+    plot.x_line
+        .attr("x1", plot.x_range(0) - plot.axis_width)
+        .attr("y1", plot.y_range(0) + plot.axis_width)
+        .attr("x2", plot.x_range(plot.params.n_days))
+        .attr("y2", plot.y_range(0) + plot.axis_width);
+
+    // X-axis ticks
+    if (plot.x_ticks === undefined) {
+        plot.x_ticks = plot.svg.append('svg:g')
+            .attr('class', 'x tick');
+    }
+    plot.x_ticks
+        .attr('transform', `translate(0,${plot.height - 0.5 * plot.margin.bottom})`)
+        .call(plot.x_axis);
+
+    // Y-axis line
+    if (plot.y_line === undefined) {
+        plot.y_line = plot.svg.append('svg:line')
+            .attr('class', 'y axis')
+            .attr('stroke-width', plot.axis_width);
+    }
+    plot.y_line
+        .attr("x1", plot.x_range(0) - plot.axis_width)
+        .attr("y1", plot.y_range(0) + plot.axis_width)
+        .attr("x2", plot.x_range(0) - plot.axis_width)
+        .attr("y2", plot.y_range(plot.params.y_max));
+
+    // Y-axis ticks
+    if (plot.y_ticks === undefined) {
+        plot.y_ticks = plot.svg.append('svg:g')
+            .attr('class', 'y tick');
+    }
+    plot.y_ticks
+        .attr('transform', `translate(${0.7 * plot.margin.left},0)`)
+        .call(plot.y_axis);
+};
+
+// Draw data series on plot
+const drawDataSeries = (plot, output) => {
+    // Remove existing data series
+    plot.svg.selectAll('path.series').remove();
+
+    // Draw new data series
+    const series = [
+        { data: output.s, class: 'varS' },
+        { data: output.e, class: 'varE' },
+        { data: output.i, class: 'varI' },
+        { data: output.r, class: 'varR' }
+    ];
+
+    series.forEach(({ data, class: className }) => {
+        plot.svg.append('svg:path')
+            .attr('d', plot.draw_line(data))
+            .attr('class', `${className} series`);
+    });
 };
