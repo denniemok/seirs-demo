@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SEIRS Model</title>
+    <script type="text/javascript" src="d3.min.js" charset="utf-8">
+    </script>
+    <link rel="stylesheet" type="text/css" href="seirs.css" />
+    <link rel="stylesheet" type="text/css" href="slider.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+      TeX: { equationNumbers: {
+        autoNumber: "AMS",
+        extensions: ["color.js"]
+      }}});
+    </script>
+    <!-- migrated to new Mathjax CDN -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </head>
+  <body>
+    <div id="diagram">
+      <img src="model-diagram.png" />
+    </div>
+    <div id="legend">
+      The plot below shows the number of
+      <span class="varS">Susceptible</span>,
+      <span class="varE">Exposed</span>,
+      <span class="varI">Infectious</span>, and
+      <span class="varR">Recovered</span> individuals over time
+      (in days) as percentages of the entire population. This enhanced model includes death rates, vaccination effects, and immunity waning.
+    </div>
+    <div id="plot-container">
+      <div id="plot">
+      </div>
+    </div>
+    <div id="model-container">
+    <div id="model-eqns">
+      <h2>Equations</h2>
+      <script type="math/tex; mode=display">% <![CDATA[
+  \begin{align*}
+    \frac{d\class{varS}{S}}{dt} &= -\beta \class{varS}{S} \class{varI}{I} + \omega \class{varR}{R} - \mu \class{varS}{S} + \mu(1-p) \\
+    \frac{d\class{varE}{E}}{dt} &= \beta \class{varS}{S} \class{varI}{I} - \sigma \class{varE}{E} - \mu \class{varE}{E} \\
+    \frac{d\class{varI}{I}}{dt} &= \sigma \class{varE}{E} - \gamma \class{varI}{I} - (\mu + \alpha) \class{varI}{I} \\
+    \frac{d\class{varR}{R}}{dt} &= \gamma \class{varI}{I} - \omega \class{varR}{R} - \mu \class{varR}{R} + \mu p \\
+    R_0 &= \frac{\sigma}{\sigma + \mu} \frac{\beta}{\gamma + \mu + \alpha} \\
+  \end{align*}
+   %]]></script>
+    </div>
+    <div id="model-params">
+      <h2>Parameters</h2>
+      <span class="plot-control">
+        <input id="n_days" type="range" min="0" max="0" />
+        <label for="n_days">X Axis:</label>
+        <span class="show_value"></span> days
+      </span>
+      <span class="plot-control">
+        <input id="y_max" type="range" min="0" max="0" />
+        <label for="y_max">Y Axis:</label>
+        <span class="show_value"></span>%
+      </span>
+        <span class="plot-control">
+          <input id="S0" type="range" min="0" max="0" />
+          <label for="S0">Initial Susceptibility, S<sub>0</sub>:</label>
+          <span class="show_value"></span>
+        </span>
+      <span class="plot-control">
+        <input id="R0" type="range" min="0" max="0" />
+        <label for="R0">Basic Reproduction Number, R<sub>0</sub>:</label>
+        <span class="show_value"></span>
+      </span>
+        <span class="plot-control">
+          <input id="infectious_period" type="range" min="0" max="0" />
+          <label for="infectious_period">Infectious Period, 1/γ:</label>
+          <span class="show_value"></span>
+        </span>
+        <span class="plot-control">
+          <input id="latent_period" type="range" min="0" max="0" />
+          <label for="latent_period">Latent Period, 1/σ:</label>
+          <span class="show_value"></span>
+        </span>
+      <span class="plot-control">
+        <input id="immunity_duration" type="range" min="0" max="0" />
+        <label for="immunity_duration">Immunity Duration, 1/ω:</label>
+        <span class="show_value"></span>
+      </span>
+      <span class="plot-control">
+        <input id="life_expectancy" type="range" min="0" max="0" />
+        <label for="life_expectancy">Life Expectancy, 1/μ:</label>
+        <span class="show_value"></span>
+      </span>
+      <span class="plot-control">
+        <input id="death_onset" type="range" min="0" max="0" />
+        <label for="death_onset">Death Onset, 1/α:</label>
+        <span class="show_value"></span>
+      </span>
+      <span class="plot-control">
+        <input id="vaccination_rate" type="range" min="0" max="0" />
+        <label for="vaccination_rate">Vaccination Rate, p:</label>
+        <span class="show_value"></span>
+      </span>
+    </div>
+    </div>
+    <div id="footer">
+      <a href="https://bitbucket.org/robmoss/seir-demo-javascript">Available on Bitbucket</a>
+    </div>
+
+    <script type="module">
+      import { solve, plot } from './seirs.js';
+      import { param_vals } from './params.js';
+      
+      plot('#plot', '#model-params', param_vals);
+    </script>
+  </body>
+</html>
