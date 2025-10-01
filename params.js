@@ -85,6 +85,7 @@ const yearLabel = (val) => `${val} year${val !== 1 ? 's' : ''}`;
  * @example percentLabel(0.5) => "50%", percentLabel(0.99) => "99%"
  */
 const percentLabel = (val) => `${Math.round(val * 100)}%`;
+const percentLabel2 = (val) => `${val}%`;
 
 // ============================================================================
 // Parameter Value Definitions
@@ -93,10 +94,10 @@ const percentLabel = (val) => `${Math.round(val * 100)}%`;
 
 export const param_vals = {
     // Simulation duration: 50 to 3000 days in 50-day increments (default: 3000)
-    n_days: generateParams(50, 3000, 50, 3000),
+    n_days: generateParams(50, 3000, 50, 3000, dayLabel),
     
     // Y-axis maximum for plot: 5% to 100% in 5% increments (default: 100%)
-    y_max: generateParams(5, 100, 5, 100),
+    y_max: generateParams(5, 100, 5, 100, percentLabel2),
     
     // Basic reproduction number: 1.0 to 5.0 in 0.1 increments (default: 3.0)
     // R0 represents average number of secondary infections from one infected individual
@@ -119,7 +120,7 @@ export const param_vals = {
     
     // Immunity duration: 0.1 to 10 years in 0.1-year increments (default: 1 year)
     // How long recovered individuals remain immune before becoming susceptible again
-    immunity_duration: generateParams(0.1, 10, 0.1, 1.0, yearLabel),
+    immunity_duration: generateParams(0, 10, 0.1, 1.0, yearLabel),
     
     // Life expectancy: 1 to 100 years (default: 76 years)
     // Average lifespan, used to calculate natural birth/death rate
