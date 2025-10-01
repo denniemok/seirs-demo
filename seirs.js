@@ -10,7 +10,7 @@ export const solve = (S0, R0, latent_period, infectious_period, n,
     if (latent_period <= 0) throw new Error('Latent period must be positive');
     if (immunity_duration <= 0) throw new Error('Immunity duration must be positive');
     if (life_expectancy <= 0) throw new Error('Life expectancy must be positive');
-    if (death_onset < 0) throw new Error('Death onset must be positive'); // can be 0
+    if (death_onset < 0) throw new Error('Death onset must be non-negative');
     if (vaccination_rate < 0 || vaccination_rate > 1) throw new Error('Vaccination rate must be between 0 and 1');
     const s = new Float64Array(n + 1);
     const e = new Float64Array(n + 1);
@@ -103,7 +103,6 @@ export const solve = (S0, R0, latent_period, infectious_period, n,
     const data_E = [];
     const data_I = [];
     const data_R = [];
-    let data_max = 0.0;
 
     // Convert from population fractions to percentages.
     const scale_by = 100;
@@ -113,16 +112,10 @@ export const solve = (S0, R0, latent_period, infectious_period, n,
         data_E.push({x: ix, y: scale_by * e[ix]});
         data_I.push({x: ix, y: scale_by * i[ix]});
         data_R.push({x: ix, y: scale_by * r[ix]});
-        
-        if (data_S[ix].y > data_max) { data_max = data_S[ix].y; }
-        if (data_E[ix].y > data_max) { data_max = data_E[ix].y; }
-        if (data_I[ix].y > data_max) { data_max = data_I[ix].y; }
-        if (data_R[ix].y > data_max) { data_max = data_R[ix].y; }
     }
 
     // Return lists of objects for use with D3.
-    data_max = scale_by;
-    return {s: data_S, e: data_E, i: data_I, r: data_R, ymax: data_max};
+    return {s: data_S, e: data_E, i: data_I, r: data_R, ymax: scale_by};
 };
 
 export const plot = (plot_id, ctrl_id, param_vals = {}) => {

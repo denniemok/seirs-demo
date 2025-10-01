@@ -1,8 +1,6 @@
 // Parameter values for the SEIRS model
-// Helper function to generate parameter arrays
 const generateParams = (start, end, step, defaultVal = null, labelFunc = null) => {
     const params = [];
-    // Use integer arithmetic to avoid floating-point precision issues
     const numSteps = Math.round((end - start) / step);
     
     for (let i = 0; i <= numSteps; i++) {
