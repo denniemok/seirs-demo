@@ -33,6 +33,30 @@
     min-height: 100vh;
     font-size: 14px;
   }
+
+  /* ===== Global Link Styles ===== */
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    border-bottom: 1px solid transparent;
+  }
+
+  a:hover {
+    color: var(--color-secondary);
+    border-bottom-color: var(--color-secondary);
+  }
+
+  a:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  a:active {
+    color: var(--color-primary);
+  }
   
   .container {
     max-width: 1050px;
@@ -480,18 +504,6 @@
   #footer p {
     color: var(--color-text-light);
     font-size: 0.7125rem;
-  }
-  
-  #footer a {
-    color: var(--color-link);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-  }
-  
-  #footer a:hover {
-    color: #A0826D;
-    text-decoration: underline;
   }
   
   /* ===== Responsive Design ===== */
