@@ -443,6 +443,31 @@
     opacity: 1;
   }
   
+  /* ===== Reset Button ===== */
+  .reset-btn {
+    background: linear-gradient(135deg, #C9A882 0%, #B8956A 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.675rem 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .reset-btn:hover {
+    background: linear-gradient(135deg, #D4B594 0%, #C9A882 100%);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  
+  .reset-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+  
   /* ===== Footer ===== */
   #footer {
     background: var(--color-card);

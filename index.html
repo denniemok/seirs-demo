@@ -91,11 +91,11 @@
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
-                    <label for="S0">
-                      Initial Susceptibility (%)
-                      <button class="info-btn" data-tooltip="Initial proportion of the population (in %) that is susceptible to the disease">ⓘ</button>
+                    <label for="use_log_scale">
+                      Log10 Y-Axis
+                      <button class="info-btn" data-tooltip="Use logarithmic scale (base 10) for the Y-axis to better visualize small values">ⓘ</button>
                     </label>
-                    <input id="S0" type="range" min="0" max="0" />
+                    <input id="use_log_scale" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
@@ -155,12 +155,16 @@
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
-                    <label for="use_log_scale">
-                      <input id="use_log_scale" type="checkbox" style="width: auto; height: auto; margin-right: 0.375rem;" />
-                      Log10 Y-Axis
-                      <button class="info-btn" data-tooltip="Use logarithmic scale (base 10) for the Y-axis to better visualize small values">ⓘ</button>
+                    <label for="S0">
+                      Initial Susceptibility (%)
+                      <button class="info-btn" data-tooltip="Initial proportion of the population (in %) that is susceptible to the disease">ⓘ</button>
                     </label>
+                    <input id="S0" type="range" min="0" max="0" />
+                    <span class="show_value"></span>
                   </span>
+                  <div style="text-align: right; margin-top: 1.5rem;">
+                    <button id="reset-params-btn" class="reset-btn">Reset</button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -72,13 +72,13 @@ const createParam = (value, defaultVal, labelFunc) => {
  * Formats a value as days with proper pluralization
  * @example dayLabel(1) => "1 day", dayLabel(5) => "5 days"
  */
-const dayLabel = (val) => `${val} day${val !== 1 ? 's' : ''}`;
+const dayLabel = (val) => `${val} day${val > 1 ? 's' : ''}`;
 
 /**
  * Formats a value as years with proper pluralization
  * @example yearLabel(1) => "1 year", yearLabel(10) => "10 years"
  */
-const yearLabel = (val) => `${val} year${val !== 1 ? 's' : ''}`;
+const yearLabel = (val) => `${val} year${val > 1 ? 's' : ''}`;
 
 /**
  * Formats a proportion (0-1) as a percentage
@@ -86,6 +86,8 @@ const yearLabel = (val) => `${val} year${val !== 1 ? 's' : ''}`;
  */
 const percentLabel = (val) => `${Math.round(val * 100)}%`;
 const percentLabel2 = (val) => `${val}%`;
+
+const logScaleLabel = (val) => `${val > 0 ? 'Log10' : 'Linear'}`;
 
 // ============================================================================
 // Parameter Value Definitions
@@ -128,5 +130,7 @@ export const param_vals = {
     
     // Vaccination rate: 0% to 100% in 1% increments (default: 0%)
     // Proportion of population vaccinated (enter recovered compartment)
-    vaccination_rate: generateParams(0, 1, 0.01, 0.0, percentLabel)
+    vaccination_rate: generateParams(0, 1, 0.01, 0.0, percentLabel),
+
+    use_log_scale: generateParams(0, 1, 1, 0, logScaleLabel)
 };

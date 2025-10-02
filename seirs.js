@@ -350,10 +350,10 @@ class PlotConfiguration {
             infectious_period: 14.0,     // 14 days infectious period
             n_days: 3000,                // Simulate 3000 days
             y_max: 100,                  // Y-axis max (percentage)
-            death_onset: 100,            // 100 days to death
+            death_onset: 0,            // 100 days to death
             immunity_duration: 1,        // 1 year of immunity
             life_expectancy: 76,         // 76 years life expectancy
-            vaccination_rate: 0.5,       // 50% vaccination rate
+            vaccination_rate: 0,       // 50% vaccination rate
             use_log_scale: false         // Use logarithmic Y-axis scale
         };
 
@@ -392,6 +392,7 @@ class PlotParameterManager {
     constructor(plot, param_vals) {
         this.plot = plot;
         this.param_vals = param_vals;  // Optional predefined parameter values
+        this.defaultParams = { ...plot.params };  // Store default values
     }
 
     /**
@@ -400,6 +401,42 @@ class PlotParameterManager {
     initialize() {
         this.plot.ctrls.selectAll('select').each(this.createSetter(false));
         this.plot.ctrls.selectAll('input').each(this.createSetter(false));
+    }
+    
+    /**
+     * Resets all parameters to their default values
+     */
+    resetToDefaults() {
+        const plot = this.plot;
+        const param_vals = this.param_vals;
+        
+        // Reset all parameters to defaults
+        Object.keys(this.defaultParams).forEach(key => {
+            plot.params[key] = this.defaultParams[key];
+        });
+        
+        // Update all form controls to reflect defaults
+        plot.ctrls.selectAll('input[type="range"]').each(function() {
+            if (this.id in param_vals) {
+                const values = param_vals[this.id];
+                const defaultIndex = values.findIndex(v => v.default);
+                if (defaultIndex >= 0) {
+                    this.value = defaultIndex;
+                    
+                    // Update displayed label
+                    const parent = d3.select(this.parentNode);
+                    const label = parent.select(".show_value")[0][0];
+                    if (label) {
+                        label.textContent = values[defaultIndex].label !== undefined 
+                            ? values[defaultIndex].label 
+                            : values[defaultIndex].value;
+                    }
+                }
+            }
+        });
+        
+        // Update the plot
+        plot.update();
     }
 
     /**
@@ -714,6 +751,11 @@ export const plot = (plot_id, ctrl_id, param_vals = {}) => {
 
     // Attach update function to plot config
     plotConfig.update = () => renderer.update();
+
+    // Setup reset button
+    d3.select('#reset-params-btn').on('click', () => {
+        paramManager.resetToDefaults();
+    });
 
     // Handle window resize
     d3.select(window).on('resize', () => {
