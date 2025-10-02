@@ -68,11 +68,15 @@ const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
  * Formats numerical array data for plotting
  * Converts proportions to percentages and creates {x, y} coordinate pairs
  */
-const formatDataForPlot = (array, scale = CONSTANTS.PERCENTAGE_SCALE) => {
-    return Array.from(array, (value, index) => ({
-        x: index,
-        y: scale * value
-    }));
+const formatDataForPlot = (array, scale = CONSTANTS.PERCENTAGE_SCALE, minValue = null) => {
+    return Array.from(array, (value, index) => {
+        let y = scale * value;
+        // For log scale, ensure minimum value to avoid log(0)
+        if (minValue !== null && y < minValue) {
+            y = minValue;
+        }
+        return { x: index, y };
+    });
 };
 
 // ============================================================================
@@ -261,7 +265,8 @@ export const solve = (
     death_onset = 100,
     immunity_duration = 1,
     life_expectancy = 76,
-    vaccination_rate = 0.5
+    vaccination_rate = 0.5,
+    logScaleMinValue = null
 ) => {
     // Validate all input parameters
     ParameterValidator.validatePositive(n, 'Number of time steps');
@@ -312,10 +317,10 @@ export const solve = (
 
     // Return formatted data for plotting
     return {
-        s: formatDataForPlot(state.s),
-        e: formatDataForPlot(state.e),
-        i: formatDataForPlot(state.i),
-        r: formatDataForPlot(state.r),
+        s: formatDataForPlot(state.s, CONSTANTS.PERCENTAGE_SCALE, logScaleMinValue),
+        e: formatDataForPlot(state.e, CONSTANTS.PERCENTAGE_SCALE, logScaleMinValue),
+        i: formatDataForPlot(state.i, CONSTANTS.PERCENTAGE_SCALE, logScaleMinValue),
+        r: formatDataForPlot(state.r, CONSTANTS.PERCENTAGE_SCALE, logScaleMinValue),
         ymax: CONSTANTS.PERCENTAGE_SCALE
     };
 };
@@ -348,7 +353,8 @@ class PlotConfiguration {
             death_onset: 100,            // 100 days to death
             immunity_duration: 1,        // 1 year of immunity
             life_expectancy: 76,         // 76 years life expectancy
-            vaccination_rate: 0.5        // 50% vaccination rate
+            vaccination_rate: 0.5,       // 50% vaccination rate
+            use_log_scale: false         // Use logarithmic Y-axis scale
         };
 
         this.updateDimensions();
@@ -424,6 +430,8 @@ class PlotParameterManager {
             // Handle range inputs differently (they use discrete value arrays)
             if (this.type === "range") {
                 PlotParameterManager.handleRangeInput(this, plot, param_vals);
+            } else if (this.type === "checkbox") {
+                plot.params[this.id] = this.checked;
             } else {
                 plot.params[this.id] = parseFloat(this.value);
             }
@@ -499,6 +507,9 @@ class PlotRenderer {
      * Main update function - recalculates model and redraws plot
      */
     update() {
+        // Determine minimum value for log scale (0.01% to avoid log(0))
+        const logScaleMinValue = this.plot.params.use_log_scale ? 0.01 : null;
+        
         // Solve SEIR model with current parameters
         const output = solve(
             this.plot.params.S0,
@@ -509,7 +520,8 @@ class PlotRenderer {
             this.plot.params.death_onset,
             this.plot.params.immunity_duration,
             this.plot.params.life_expectancy,
-            this.plot.params.vaccination_rate
+            this.plot.params.vaccination_rate,
+            logScaleMinValue
         );
 
         // Update plot components
@@ -523,6 +535,10 @@ class PlotRenderer {
      */
     updateScales() {
         const plot = this.plot;
+        
+        // Adjust left margin for log scale to accommodate wider labels
+        const useLogScale = plot.params.use_log_scale;
+        plot.margin.left = useLogScale ? 60 : 50;
 
         // X-axis scale (time in days)
         if (!plot.x_range) {
@@ -532,13 +548,13 @@ class PlotRenderer {
             .range([plot.margin.left, plot.width - plot.margin.right])
             .domain([0, plot.params.n_days]);
 
-        // Y-axis scale (percentage)
-        if (!plot.y_range) {
-            plot.y_range = d3.scale.linear();
+        // Y-axis scale (percentage) - linear or logarithmic
+        if (!plot.y_range || (useLogScale && plot.y_range.domain()[0] === 0) || (!useLogScale && plot.y_range.domain()[0] !== 0)) {
+            plot.y_range = useLogScale ? d3.scale.log() : d3.scale.linear();
         }
         plot.y_range
             .range([plot.height - plot.margin.bottom, plot.margin.top])
-            .domain([0, plot.params.y_max]);
+            .domain(useLogScale ? [0.01, plot.params.y_max] : [0, plot.params.y_max]);
 
         // X-axis generator
         if (!plot.x_axis) {
@@ -553,12 +569,32 @@ class PlotRenderer {
         if (!plot.y_axis) {
             plot.y_axis = d3.svg.axis();
         }
-        plot.y_axis
-            .scale(plot.y_range)
-            .orient('left')
-            .tickSize(0)
-            .tickFormat(d => `${d}`)
-            .ticks(4);
+        
+        // Configure Y-axis based on scale type
+        if (useLogScale) {
+            // Manually specify tick values for better spacing in log scale
+            const logTickValues = [0.01, 0.1, 1, 10, 100];
+            plot.y_axis
+                .scale(plot.y_range)
+                .orient('left')
+                .tickSize(0)
+                .tickValues(logTickValues)
+                .tickFormat(d => {
+                    // Format log scale ticks: show nice round numbers
+                    if (d >= 1) return `${Math.round(d)}`;
+                    if (d >= 0.1) return d.toFixed(1);
+                    if (d >= 0.01) return d.toFixed(2);
+                    return d.toExponential(0);
+                });
+        } else {
+            plot.y_axis
+                .scale(plot.y_range)
+                .orient('left')
+                .tickSize(0)
+                .tickValues(null)  // Clear custom tick values
+                .tickFormat(d => `${d}`)
+                .ticks(4);
+        }
     }
 
     /**
@@ -574,6 +610,9 @@ class PlotRenderer {
      */
     updateXAxis() {
         const plot = this.plot;
+        
+        // Get the minimum Y value from the domain (0 for linear, 0.01 for log)
+        const yMin = plot.y_range.domain()[0];
 
         // X-axis baseline
         if (!plot.x_line) {
@@ -583,9 +622,9 @@ class PlotRenderer {
         }
         plot.x_line
             .attr("x1", plot.x_range(0) - plot.axis_width)
-            .attr("y1", plot.y_range(0) + plot.axis_width)
+            .attr("y1", plot.y_range(yMin) + plot.axis_width)
             .attr("x2", plot.x_range(plot.params.n_days))
-            .attr("y2", plot.y_range(0) + plot.axis_width);
+            .attr("y2", plot.y_range(yMin) + plot.axis_width);
 
         // X-axis tick marks and labels
         if (!plot.x_ticks) {
@@ -602,6 +641,9 @@ class PlotRenderer {
      */
     updateYAxis() {
         const plot = this.plot;
+        
+        // Get the minimum Y value from the domain (0 for linear, 0.01 for log)
+        const yMin = plot.y_range.domain()[0];
 
         // Y-axis baseline
         if (!plot.y_line) {
@@ -611,7 +653,7 @@ class PlotRenderer {
         }
         plot.y_line
             .attr("x1", plot.x_range(0) - plot.axis_width)
-            .attr("y1", plot.y_range(0) + plot.axis_width)
+            .attr("y1", plot.y_range(yMin) + plot.axis_width)
             .attr("x2", plot.x_range(0) - plot.axis_width)
             .attr("y2", plot.y_range(plot.params.y_max));
 
