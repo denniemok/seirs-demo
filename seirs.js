@@ -37,6 +37,8 @@ class ParameterValidator {
 
     /**
      * Validates that a value is positive (> 0)
+     * @param {number} value - The value to validate
+     * @param {string} name - Parameter name for error messages
      */
     static validatePositive(value, name) {
         if (value <= 0) {
@@ -46,6 +48,8 @@ class ParameterValidator {
 
     /**
      * Validates that a value is non-negative (>= 0)
+     * @param {number} value - The value to validate
+     * @param {string} name - Parameter name for error messages
      */
     static validateNonNegative(value, name) {
         if (value < 0) {
@@ -61,17 +65,27 @@ class ParameterValidator {
 /**
  * Clamps a value between min and max bounds
  * Used to ensure compartment values stay in valid range [0,1]
+ * 
+ * @param {number} value - The value to clamp
+ * @param {number} min - Minimum allowed value (default: 0)
+ * @param {number} max - Maximum allowed value (default: 1)
+ * @returns {number} Clamped value between min and max
  */
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
 /**
  * Formats numerical array data for plotting
  * Converts proportions to percentages and creates {x, y} coordinate pairs
+ * 
+ * @param {Array|TypedArray} array - Array of proportion values (0-1)
+ * @param {number} scale - Scale factor to apply (default: 100 for percentage)
+ * @param {number|null} minValue - Minimum Y value for log scale (default: null for linear scale)
+ * @returns {Array} Array of {x, y} coordinate objects for D3 plotting
  */
 const formatDataForPlot = (array, scale = CONSTANTS.PERCENTAGE_SCALE, minValue = null) => {
     return Array.from(array, (value, index) => {
         let y = scale * value;
-        // For log scale, ensure minimum value to avoid log(0)
+        // For log scale, ensure minimum value to avoid log(0) which is undefined
         if (minValue !== null && y < minValue) {
             y = minValue;
         }
@@ -98,13 +112,13 @@ class SEIRParameters {
     constructor(config) {
         const { R0, infectious_period, latent_period, death_onset, immunity_duration, life_expectancy } = config;
         
-        // Disease-induced death rate (0 if death_onset is infinite)
+        // Disease-induced death rate (0 if death_onset is 0, meaning no disease-induced deaths)
         this.alpha = death_onset > 0 ? 1 / death_onset : 0;
         
         // Recovery rate (1/days to recover)
         this.gamma = 1 / infectious_period;
         
-        // Immunity waning rate (convert years to days)
+        // Immunity waning rate (convert years to days, 0 if immunity_duration is 0, meaning permanent immunity)
         this.omega = immunity_duration > 0 ? 1 / (CONSTANTS.DAYS_PER_YEAR * immunity_duration) : 0;
         
         // Natural death/birth rate (convert years to days)
@@ -350,11 +364,11 @@ class PlotConfiguration {
             infectious_period: 14.0,     // 14 days infectious period
             n_days: 3000,                // Simulate 3000 days
             y_max: 100,                  // Y-axis max (percentage)
-            death_onset: 0,            // 100 days to death
+            death_onset: 0,              // No disease-induced death (0 = disabled)
             immunity_duration: 1,        // 1 year of immunity
             life_expectancy: 76,         // 76 years life expectancy
-            vaccination_rate: 0,       // 50% vaccination rate
-            use_log_scale: false         // Use logarithmic Y-axis scale
+            vaccination_rate: 0,         // No vaccination (0% vaccination rate)
+            use_log_scale: false         // Use linear Y-axis scale
         };
 
         this.updateDimensions();

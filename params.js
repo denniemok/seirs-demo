@@ -78,15 +78,36 @@ const dayLabel = (val) => `${val} day${val > 1 ? 's' : ''}`;
  * Formats a value as years with proper pluralization
  * @example yearLabel(1) => "1 year", yearLabel(10) => "10 years"
  */
-const yearLabel = (val) => `${val} year${val > 1 ? 's' : ''}`;
+const yearLabel = (val) => `${val} year${val > 1 ? '' : 's'}`;
+
+/**
+ * Formats death onset value with special handling for 0 (no deaths)
+ * @example deathOnsetLabel(0) => "No deaths", deathOnsetLabel(10) => "10 days"
+ */
+const deathOnsetLabel = (val) => val === 0 ? 'No deaths' : dayLabel(val);
+
+/**
+ * Formats immunity duration with special handling for 0 (permanent immunity)
+ * @example immunityDurationLabel(0) => "Permanent", immunityDurationLabel(1) => "1 year"
+ */
+const immunityDurationLabel = (val) => val === 0 ? 'Permanent' : yearLabel(val);
 
 /**
  * Formats a proportion (0-1) as a percentage
  * @example percentLabel(0.5) => "50%", percentLabel(0.99) => "99%"
  */
 const percentLabel = (val) => `${Math.round(val * 100)}%`;
+
+/**
+ * Formats a numeric value as a percentage (already in 0-100 range)
+ * @example percentLabel2(50) => "50%", percentLabel2(99) => "99%"
+ */
 const percentLabel2 = (val) => `${val}%`;
 
+/**
+ * Formats log scale toggle value
+ * @example logScaleLabel(0) => "Linear", logScaleLabel(1) => "Log10"
+ */
 const logScaleLabel = (val) => `${val > 0 ? 'Log10' : 'Linear'}`;
 
 // ============================================================================
@@ -118,11 +139,11 @@ export const param_vals = {
     
     // Death onset: 0 to 1000 days (default: 0, meaning no disease-induced death)
     // Average time from infection to death for fatal cases
-    death_onset: generateParams(0, 1000, 1, 0, dayLabel),
+    death_onset: generateParams(0, 1000, 1, 0, deathOnsetLabel),
     
-    // Immunity duration: 0.1 to 10 years in 0.1-year increments (default: 1 year)
-    // How long recovered individuals remain immune before becoming susceptible again
-    immunity_duration: generateParams(0, 10, 0.1, 1.0, yearLabel),
+    // Immunity duration: 0 to 10 years in 0.1-year increments (default: 1 year)
+    // How long recovered individuals remain immune before becoming susceptible again (0 = permanent)
+    immunity_duration: generateParams(0, 10, 0.1, 1.0, immunityDurationLabel),
     
     // Life expectancy: 1 to 100 years (default: 76 years)
     // Average lifespan, used to calculate natural birth/death rate
@@ -132,5 +153,7 @@ export const param_vals = {
     // Proportion of population vaccinated (enter recovered compartment)
     vaccination_rate: generateParams(0, 1, 0.01, 0.0, percentLabel),
 
+    // Log scale toggle: 0 (Linear) or 1 (Log10) (default: Linear)
+    // Use logarithmic Y-axis scale for better visualization of small values
     use_log_scale: generateParams(0, 1, 1, 0, logScaleLabel)
 };
