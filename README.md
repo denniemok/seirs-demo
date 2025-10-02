@@ -16,9 +16,9 @@ and disease-induced mortality.
 
 ## ✨ Features
 
-<table style="width:100%;">
+<table>
 <tr>
-<td >
+<td width=500px>
 
 ### 🎮 Interactive Controls
 - Real-time parameter adjustments
@@ -28,7 +28,7 @@ and disease-induced mortality.
 <br>
 
 </td>
-<td >
+<td width=500px>
 
 ### 📊 Flexible Visualization
 - Linear & logarithmic Y-axis
@@ -71,53 +71,34 @@ and disease-induced mortality.
 
 ### Prerequisites
 
-✅ A modern web browser (Chrome, Firefox, Safari, or Edge)
-✅ No installation or build process required!
+- A modern web browser (Chrome, Firefox, Safari, or Edge)
+- No installation or build process required!
 
 ### Quick Start
 
-<details>
+1. #### Get the code
 
-<summary>1️⃣ Get the code</summary>
+    ```bash
+    git clone https://github.com/denniemok/seirs-demo.git
+    ```
+    
+    Or [download ZIP](https://github.com/denniemok/seirs-demo/archive/refs/heads/main.zip) directly.
 
-```bash
-git clone https://github.com/denniemok/seirs-demo.git
-```
+2. #### Open in browser
 
-Or [download ZIP](https://github.com/denniemok/seirs-demo/archive/refs/heads/main.zip) directly.
+    Double-click `index.html` to open directly in your browser, or use a local web server for full functionality:
+    
+    ```bash
+    cd seirs-demo
+    
+    # Python 3
+    python -m http.server 8000
+    
+    # Node.js
+    npx http-server
+    ```
 
-</details>
-
-<details>
-
-<summary>2️⃣ Open in browser</summary>
-
-**Option A:** Double-click `index.html` to open directly in your browser.
-
-**Option B:** Use a local web server for full functionality:
-
-```bash
-cd seirs-demo
-
-# Python 3
-python -m http.server 8000
-
-# Node.js
-npx http-server
-```
-
-Then open **`http://localhost:8000`** in your browser.
-
-</details>
-
-<details>
-
-<summary>3️⃣ Explore!</summary>
-
-- 🎚️ Adjust sliders to modify parameters
-- ℹ️ Hover over info buttons for explanations
-- 📐 Click "Equations" to see the math
-- 🔄 Use "Reset" to restore defaults
+    Then open **`http://localhost:8000`** in your browser.
 
 </details>
 
@@ -125,7 +106,7 @@ Then open **`http://localhost:8000`** in your browser.
 
 ## 📐 Technical Details
 
-### The SEIRS Framework
+### Framework
 
 The model divides the population into **four compartments**:
 
@@ -136,17 +117,17 @@ The model divides the population into **four compartments**:
 | **I** (Infectious) | 🟧 Individuals who can transmit the disease |
 | **R** (Recovered) | 🟨 Individuals who have immunity (temporary or permanent) |
 
-### Mathematical Model
+<br>
+
+### Mathematics
 
 The dynamics are governed by these differential equations:
 
-```math
-\begin{aligned}
-dS/dt = -βSI + ωR - μS + μ(1-p) \\
-dE/dt = βSI - σE - μE \\
-dI/dt = σE - γI - (μ+α)I \\
-dR/dt = γI - ωR - μR + μp \\
-\end{aligned}
+```
+dS/dt = -βSI + ωR - μS + μ(1-p)
+dE/dt = βSI - σE - μE
+dI/dt = σE - γI - (μ+α)I
+dR/dt = γI - ωR - μR + μp
 ```
 
 | Symbol | Description |
@@ -158,6 +139,8 @@ dR/dt = γI - ωR - μR + μp \\
 | **μ** | Natural mortality rate (1 / life expectancy) |
 | **α** | Disease-induced mortality rate (1 / infection-to-death period) |
 | **p** | Vaccination rate |
+
+<br>
 
 ### Implementation
 
@@ -185,7 +168,7 @@ seirs-demo/
 
 ## 🎨 Customisation
 
-#### Modify Parameters
+### Modify Parameters
 
 Edit `params.js` to change parameter ranges and defaults:
 
@@ -194,7 +177,7 @@ Edit `params.js` to change parameter ranges and defaults:
 R0: generateParams(1, 10, 0.1, 3.0)
 ```
 
-#### Change Styling
+### Change Styling
 
 Modify `seirs.css` to customize the appearance. CSS variables make theming easy:
 
