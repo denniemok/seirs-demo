@@ -1,46 +1,46 @@
 # 🦠 Interactive SEIRS Model
 
-> This interactive simulator demonstrates 
-how infectious diseases spread through 
-populations using a deterministic, 
-mean-field SEIRS compartmental model. 
-It features real-time parameter 
-adjustments and elegant visualizations 
-to help understand epidemic dynamics, 
-including vaccination, immunity waning, 
+This interactive simulator demonstrates how infectious diseases spread through populations using a deterministic, mean-field SEIRS compartmental model. 
+It features real-time parameter adjustments and elegant visualizations to help understand epidemic dynamics, including vaccination, immunity waning, 
 and disease-induced mortality.
+
+<br>
 
 <div align="center">
 
-**[🌐 Live Demo](https://denniemok.github.io/seirs-demo)** • **[📥 Download](https://github.com/denniemok/seirs-demo/archive/refs/heads/main.zip)** • **[📖 Documentation](#technical-details)**
+**[🌐 Live Demo](https://denniemok.github.io/seirs-demo)** • **[📥 Download](https://github.com/denniemok/seirs-demo/archive/refs/heads/main.zip)** • **[📖 Documentation](#-technical-details)**
 
 </div>
 
+<br>
+
 ## ✨ Features
 
-<table>
+<table style="width:100%;">
 <tr>
-<td width="50%">
+<td >
 
 ### 🎮 Interactive Controls
 - Real-time parameter adjustments
 - Intuitive slider controls
 - Instant visualization updates
 - Reset to defaults anytime
+<br>
 
 </td>
-<td width="50%">
+<td >
 
 ### 📊 Flexible Visualization
 - Linear & logarithmic Y-axis
 - Adjustable time horizons (3000 days)
 - Color-coded compartments (S, E, I, R)
 - Responsive plot design
+<br>
 
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td >
 
 ### 🔬 Epidemiological Parameters
 - Basic reproduction number (R₀)
@@ -48,9 +48,10 @@ and disease-induced mortality.
 - Immunity duration
 - Vaccination rates
 - Disease-induced mortality
+<br>
 
 </td>
-<td width="50%">
+<td >
 
 ### 🎓 Educational Content
 - Built-in mathematical equations
@@ -58,21 +59,26 @@ and disease-induced mortality.
 - Helpful tooltips
 - Clean, modern interface
 - Zero dependencies required
+<br>
 
 </td>
 </tr>
 </table>
 
+<br>
+
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-✅ A modern web browser (Chrome, Firefox, Safari, or Edge)  
+✅ A modern web browser (Chrome, Firefox, Safari, or Edge)
 ✅ No installation or build process required!
 
 ### Quick Start
 
-**1️⃣ Get the code**
+<details>
+
+<summary>1️⃣ Get the code</summary>
 
 ```bash
 git clone https://github.com/denniemok/seirs-demo.git
@@ -80,7 +86,11 @@ git clone https://github.com/denniemok/seirs-demo.git
 
 Or [download ZIP](https://github.com/denniemok/seirs-demo/archive/refs/heads/main.zip) directly.
 
-**2️⃣ Open in browser**
+</details>
+
+<details>
+
+<summary>2️⃣ Open in browser</summary>
 
 **Option A:** Double-click `index.html` to open directly in your browser.
 
@@ -98,12 +108,20 @@ npx http-server
 
 Then open **`http://localhost:8000`** in your browser.
 
-**3️⃣ Explore!**
+</details>
+
+<details>
+
+<summary>3️⃣ Explore!</summary>
 
 - 🎚️ Adjust sliders to modify parameters
 - ℹ️ Hover over info buttons for explanations
 - 📐 Click "Equations" to see the math
 - 🔄 Use "Reset" to restore defaults
+
+</details>
+
+<br>
 
 ## 📐 Technical Details
 
@@ -123,13 +141,13 @@ The model divides the population into **four compartments**:
 The dynamics are governed by these differential equations:
 
 ```math
-dS/dt = -βSI + ωR - μS + μ(1-p)\\
-dE/dt = βSI - σE - μE\\
-dI/dt = σE - γI - (μ+α)I\\
-dR/dt = γI - ωR - μR + μp
+\begin{aligned}
+dS/dt = -βSI + ωR - μS + μ(1-p) \\
+dE/dt = βSI - σE - μE \\
+dI/dt = σE - γI - (μ+α)I \\
+dR/dt = γI - ωR - μR + μp \\
+\end{aligned}
 ```
-
-**Parameter definitions:**
 
 | Symbol | Description |
 |--------|-------------|
@@ -150,6 +168,8 @@ dR/dt = γI - ωR - μR + μp
 | Visualization | D3.js v3.5.17 (SVG) |
 | Documentation | JSDoc + inline comments |
 
+<br>
+
 ## 📁 Project Structure
 
 ```
@@ -161,9 +181,11 @@ seirs-demo/
 └── 📊 d3.min.js           # D3.js library for visualization
 ```
 
+<br>
+
 ## 🎨 Customisation
 
-### Modify Parameters
+#### Modify Parameters
 
 Edit `params.js` to change parameter ranges and defaults:
 
@@ -172,7 +194,7 @@ Edit `params.js` to change parameter ranges and defaults:
 R0: generateParams(1, 10, 0.1, 3.0)
 ```
 
-### Change Styling
+#### Change Styling
 
 Modify `seirs.css` to customize the appearance. CSS variables make theming easy:
 
@@ -185,6 +207,8 @@ Modify `seirs.css` to customize the appearance. CSS variables make theming easy:
 }
 ```
 
+<br>
+
 ## 🙏 Acknowledgments
 
 This project is built upon and inspired by:
@@ -194,17 +218,14 @@ This project is built upon and inspired by:
 - 📊 [D3.js](https://d3js.org/) by Mike Bostock
 - 📖 Bjørnstad, O., Shea, K., Krzywinski, M. & Altman, N. [_The SEIRS model for infectious disease dynamics_](http://www.nature.com/articles/s41592-020-0856-2). Nature Methods **17**:557–558 (2020)
 
----
-
-## 📄 License
-
-This project, including D3.js v3.5.17, is distributed under the [**BSD 3-Clause License**](LICENSE).
-
-## ⚠️ Disclaimer
+<br>
+<hr>
 
 This model is intended for educational purposes to understand epidemiological dynamics. For public health decisions, please consult epidemiological experts and use validated, peer-reviewed models.
 
----
+This project, including D3.js v3.5.17, is distributed under the [**BSD 3-Clause License**](LICENSE).
+
+<br><br><br>
 
 <div align="center">
 
