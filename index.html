@@ -76,23 +76,23 @@
                 <div class="params-grid">
                   <span class="plot-control">
                     <label for="n_days">
-                      X-Axis Scale (days)
-                      <button class="info-btn" data-tooltip="Time period (in days) to be displayed on the X-axis; Time steps for the simulation">ⓘ</button>
+                      X-Axis Limit (days)
+                      <button class="info-btn" data-tooltip="Limit the simulation to be within a certain time period (in days); Define the time steps for the simulation">ⓘ</button>
                     </label>
                     <input id="n_days" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
                     <label for="y_max">
-                      Y-Axis Scale (%)
-                      <button class="info-btn" data-tooltip="Maximum fraction of the population (in %) to be displayed on the Y-axis">ⓘ</button>
+                      Y-Axis Limit (%)
+                      <button class="info-btn" data-tooltip="Limit the fraction of the population (in %) to be displayed on the Y-axis">ⓘ</button>
                     </label>
                     <input id="y_max" type="range" min="0" max="0" />
                     <span class="show_value"></span>
                   </span>
                   <span class="plot-control">
                     <label for="use_log_scale">
-                      Log10 Y-Axis
+                      Y-Axis Scale
                       <button class="info-btn" data-tooltip="Use logarithmic scale (base 10) for the Y-axis to better visualize small values">ⓘ</button>
                     </label>
                     <input id="use_log_scale" type="range" min="0" max="0" />
@@ -267,8 +267,9 @@
 
     <footer id="footer">
       <div class="container">
-        <p>Built based on <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
+        <p>Inspired by <a href="https://github.com/robmoss/seir-demo">seir-demo</a> and 
         <a href="https://github.com/martinkrz/posepi2">posepi2</a>.</p>
+        <p>© 2024 Dennie Mok</p>
       </div>
     </footer>
 
